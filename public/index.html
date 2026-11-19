@@ -481,37 +481,84 @@
             </form>
           </div>
 
-          <!-- Tarjeta 3: Configuración 2FA TOTP -->
+          <!-- Tarjeta 3: Configuración 2FA TOTP (Flujo en 2 Pasos) -->
           <div
             class="md:col-span-1 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center gap-2 mb-4">
+            <div class="space-y-4">
+              <div class="flex items-center gap-2">
                 <span class="p-2 bg-emerald-50 text-emerald-700 rounded-lg text-lg">📱</span>
                 <div>
                   <h3 class="text-sm font-bold text-slate-900">Doble Factor (2FA TOTP)</h3>
-                  <p class="text-xs text-slate-500">Google Authenticator o Authy</p>
+                  <p class="text-xs text-slate-500">Google Authenticator, Authy o 1Password</p>
                 </div>
               </div>
 
               <p class="text-xs text-slate-600 leading-relaxed">
-                El segundo factor de autenticación añade una capa de defensa basada en códigos temporales (TOTP de 30
-                segundos) resistente a ataques de fuerza bruta.
+                El segundo factor de autenticación añade una capa de defensa criptográfica con claves efímeras de 30
+                segundos y cifrado en reposo AES-256-GCM.
               </p>
 
-              <!-- Panel donde se muestran los datos del 2FA una vez generado -->
-              <div id="box-2fa-result" class="hidden mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div class="text-[11px] font-semibold text-slate-700">Clave Secreta Base32:</div>
-                <div class="flex items-center gap-1.5">
-                  <input type="text" id="secret-2fa-val" readonly
-                    class="font-mono text-xs w-full bg-white border border-slate-200 rounded px-2 py-1 text-slate-800 select-all">
-                  <button type="button" onclick="copySecret2FA()"
-                    class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold">
-                    Copiar
-                  </button>
+              <!-- Estado 2FA Activo -->
+              <div id="box-2fa-active" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                  <span>🛡️</span> <span>2FA Activo y Protegido</span>
                 </div>
-                <p class="text-[10px] text-slate-500 leading-tight">
-                  Ingresa esta clave en tu aplicación de autenticación para vincularla a tu identidad.
+                <p class="text-[11px] text-emerald-700">Tu cuenta tiene el segundo factor habilitado y protegido contra ataques de fuerza bruta.</p>
+              </div>
+
+              <!-- Flujo Paso 1 y Paso 2: Generar y Confirmar Secreto -->
+              <div id="box-2fa-setup" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div class="flex items-center justify-between pb-1 border-b border-slate-200/70">
+                  <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wide">Paso 1: Vincular App</span>
+                  <span class="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">Pendiente</span>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-700 mb-1">Clave Secreta Base32:</label>
+                  <div class="flex items-center gap-1.5">
+                    <input type="text" id="secret-2fa-val" readonly
+                      class="font-mono text-xs w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 select-all font-bold tracking-wider">
+                    <button type="button" onclick="copySecret2FA()"
+                      class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition">
+                      Copiar
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-1 leading-tight">
+                    Ingresa esta clave en tu aplicación de autenticación para vincular tu identidad.
+                  </p>
+                </div>
+
+                <!-- Paso 2: Verificación de código TOTP -->
+                <div class="pt-2 border-t border-slate-200/70 space-y-2">
+                  <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wide">Paso 2: Confirmar Código</span>
+                  <div>
+                    <label for="input-2fa-code" class="block text-[11px] font-semibold text-slate-700 mb-1">Código de 6 dígitos generado:</label>
+                    <div class="flex gap-2">
+                      <input type="text" id="input-2fa-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456"
+                        class="w-full text-center tracking-widest font-mono text-sm font-bold bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                      <button type="button" id="btn-verify-2fa" onclick="verifyTwoFactor()"
+                        class="whitespace-nowrap px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                        Verificar y Activar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Códigos de Respaldo Generados -->
+              <div id="box-2fa-backup-codes" class="hidden p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5">
+                <div class="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
+                  <span>⚠️</span> <span>Códigos de Respaldo de Un Solo Uso</span>
+                </div>
+                <p class="text-[11px] text-amber-800 leading-tight">
+                  Guarda estos códigos en un lugar seguro (gestor de contraseñas). Cada código solo puede usarse una vez en caso de pérdida del dispositivo móvil.
                 </p>
+                <div id="backup-codes-list" class="grid grid-cols-2 gap-1.5 font-mono text-xs bg-white p-2.5 rounded-lg border border-amber-200 text-slate-800 text-center font-bold">
+                </div>
+                <button type="button" onclick="copyBackupCodes()"
+                  class="w-full py-1.5 px-3 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-semibold transition">
+                  📋 Copiar Códigos de Respaldo
+                </button>
               </div>
             </div>
 
@@ -680,19 +727,24 @@
       const res = await fetch(endpoint, { ...options, headers });
       const data = await res.json().catch(() => ({}));
 
-      // Si el backend devuelve 401 (No autenticado) o 403 por cuenta revocada
+      // Si el backend devuelve 401 (No autenticado / token_version inválido / credenciales cambiadas)
       if (res.status === 401 && !endpoint.includes('/api/auth/login')) {
-        showToast('Sesión expirada o no autorizada. Inicie sesión nuevamente.', 'error');
+        const errorMsg = data.error || 'Sesión expirada o no autorizada. Inicie sesión nuevamente.';
+        showToast(errorMsg, 'error');
         clearSession();
         showLoginView();
-        throw new Error('Sesión no autorizada');
+        throw new Error(errorMsg);
       }
 
-      if (res.status === 403 && data.error && data.error.includes('revocada')) {
-        showToast('Acceso denegado: Su cuenta ha sido revocada.', 'error');
-        clearSession();
-        showLoginView();
-        throw new Error('Cuenta revocada');
+      // Si el backend devuelve 403 (Acceso denegado / cuenta revocada en tiempo real)
+      if (res.status === 403 && !endpoint.includes('/api/auth/login')) {
+        const errorMsg = data.error || 'Acceso denegado: Su cuenta ha sido revocada o carece de permisos.';
+        showToast(errorMsg, 'error');
+        if (data.error && (data.error.includes('revocada') || data.error.includes('inactiva'))) {
+          clearSession();
+          showLoginView();
+        }
+        throw new Error(errorMsg);
       }
 
       return { ...data, _status: res.status, _ok: res.ok };
@@ -1053,8 +1105,10 @@
     }
 
     // ----------------------------------------------------------
-    // 7. Portal del Empleado (Perfil & 2FA)
+    // 7. Portal del Empleado (Perfil & 2FA Flujo Seguro)
     // ----------------------------------------------------------
+    let currentBackupCodes = [];
+
     async function loadProfileData() {
       try {
         const res = await apiRequest('/api/portal/profile');
@@ -1075,12 +1129,24 @@
           }
 
           const badge2fa = document.getElementById('profile-2fa-status');
-          if (u.has2FA) {
+          const boxActive = document.getElementById('box-2fa-active');
+          const btnSetup = document.getElementById('btn-setup-2fa');
+
+          if (u.is2FAEnabled) {
             badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800';
             badge2fa.textContent = '🛡️ Habilitado';
+            if (boxActive) boxActive.classList.remove('hidden');
+            if (btnSetup) btnSetup.textContent = 'Regenerar Clave 2FA';
+          } else if (u.is2FAPending) {
+            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-amber-100 text-amber-800';
+            badge2fa.textContent = '⏳ Pendiente';
+            if (boxActive) boxActive.classList.add('hidden');
+            if (btnSetup) btnSetup.textContent = 'Reanudar Configuración 2FA';
           } else {
-            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-amber-50 text-amber-700';
-            badge2fa.textContent = 'Pendiente';
+            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-600';
+            badge2fa.textContent = '⚪ Deshabilitado';
+            if (boxActive) boxActive.classList.add('hidden');
+            if (btnSetup) btnSetup.textContent = 'Configurar 2FA (TOTP)';
           }
         }
       } catch (err) {
@@ -1097,10 +1163,13 @@
         const res = await apiRequest('/api/portal/2fa/setup', { method: 'POST' });
         if (res.success && res.twoFactor) {
           document.getElementById('secret-2fa-val').value = res.twoFactor.secret;
-          document.getElementById('box-2fa-result').classList.remove('hidden');
-          showToast('Clave 2FA TOTP generada exitosamente', 'success');
+          document.getElementById('input-2fa-code').value = '';
+          document.getElementById('box-2fa-setup').classList.remove('hidden');
+          document.getElementById('box-2fa-backup-codes').classList.add('hidden');
+          showToast('Clave 2FA generada. Ingrese el código de 6 dígitos para verificar y activar.', 'info');
           loadProfileData();
-          if (currentUser.role === 'Admin') loadAuditLogsTable();
+          if (currentUser && currentUser.role === 'Admin') loadAuditLogsTable();
+          document.getElementById('input-2fa-code').focus();
         } else {
           showToast(res.error || 'Error al generar 2FA', 'error');
         }
@@ -1112,11 +1181,73 @@
       }
     }
 
+    async function verifyTwoFactor() {
+      const codeInput = document.getElementById('input-2fa-code');
+      const code = (codeInput.value || '').trim();
+
+      if (!/^\d{6}$/.test(code)) {
+        showToast('Debe ingresar un código TOTP numérico de 6 dígitos.', 'error');
+        codeInput.focus();
+        return;
+      }
+
+      const btn = document.getElementById('btn-verify-2fa');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+
+      try {
+        const res = await apiRequest('/api/portal/2fa/verify', {
+          method: 'POST',
+          body: JSON.stringify({ code })
+        });
+
+        if (res.success) {
+          showToast('¡Segundo factor (2FA) activado exitosamente!', 'success');
+          document.getElementById('box-2fa-setup').classList.add('hidden');
+          codeInput.value = '';
+
+          if (Array.isArray(res.backupCodes) && res.backupCodes.length > 0) {
+            currentBackupCodes = res.backupCodes;
+            const container = document.getElementById('backup-codes-list');
+            container.innerHTML = res.backupCodes
+              .map(c => `<div class="bg-white border border-amber-200/80 rounded px-2 py-1 text-slate-800 font-mono text-[11px] shadow-sm">${escapeHtml(c)}</div>`)
+              .join('');
+            document.getElementById('box-2fa-backup-codes').classList.remove('hidden');
+          }
+
+          loadProfileData();
+          if (currentUser && currentUser.role === 'Admin') loadAuditLogsTable();
+        } else {
+          showToast(res.error || 'Código 2FA incorrecto o expirado.', 'error');
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Verificar y Activar';
+      }
+    }
+
     function copySecret2FA() {
       const copyText = document.getElementById('secret-2fa-val');
       copyText.select();
       navigator.clipboard.writeText(copyText.value).then(() => {
         showToast('¡Clave secreta 2FA copiada al portapapeles!', 'info');
+      }).catch(() => {
+        showToast('Texto seleccionado. Presione Ctrl+C para copiar.', 'info');
+      });
+    }
+
+    function copyBackupCodes() {
+      if (!currentBackupCodes || currentBackupCodes.length === 0) {
+        showToast('No hay códigos de respaldo disponibles.', 'error');
+        return;
+      }
+      const text = currentBackupCodes.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('¡Códigos de respaldo copiados al portapapeles!', 'info');
+      }).catch(() => {
+        showToast('No se pudo copiar automáticamente al portapapeles.', 'info');
       });
     }
 

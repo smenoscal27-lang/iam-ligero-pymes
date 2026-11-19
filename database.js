@@ -98,7 +98,7 @@ async function initializeDatabase() {
     await run('PRAGMA foreign_keys = ON;');
     await run('PRAGMA journal_mode = WAL;');
 
-    // 1. Tabla users: control de identidades, roles, estado y 2FA
+    // 1. Tabla users: control de identidades, roles, estado, versión de token y 2FA
     await run(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,10 +107,17 @@ async function initializeDatabase() {
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL CHECK(role IN ('Admin', 'Employee')) DEFAULT 'Employee',
         status TEXT NOT NULL CHECK(status IN ('Active', 'Revoked')) DEFAULT 'Active',
+        token_version INTEGER NOT NULL DEFAULT 1,
         secret_2fa TEXT NULL,
+        is_2fa_enabled INTEGER NOT NULL DEFAULT 0,
+        backup_codes TEXT NULL,
+        last_totp_code TEXT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Migración idempotente para bases de datos existentes
+    await migrateUsersTableSchema();
 
     // 2. Tabla audit_logs: registro inmutable de auditoría
     await run(`
@@ -128,6 +135,7 @@ async function initializeDatabase() {
     await run('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);');
     await run('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);');
     await run('CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);');
+    await run('CREATE INDEX IF NOT EXISTS idx_users_token_version ON users(token_version);');
     await run('CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp);');
     await run('CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_email);');
 
@@ -141,6 +149,32 @@ async function initializeDatabase() {
   } catch (error) {
     console.error('[DATABASE] ❌ Error durante la inicialización:', error);
     throw error;
+  }
+}
+
+/**
+ * Migra de forma idempotente las columnas de la tabla users si se ejecuta
+ * sobre una base de datos preexistente.
+ */
+async function migrateUsersTableSchema() {
+  try {
+    const tableInfo = await all('PRAGMA table_info(users);');
+    const existingColumns = tableInfo.map((col) => col.name);
+
+    if (!existingColumns.includes('token_version')) {
+      await run('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1;');
+    }
+    if (!existingColumns.includes('is_2fa_enabled')) {
+      await run('ALTER TABLE users ADD COLUMN is_2fa_enabled INTEGER NOT NULL DEFAULT 0;');
+    }
+    if (!existingColumns.includes('backup_codes')) {
+      await run('ALTER TABLE users ADD COLUMN backup_codes TEXT NULL;');
+    }
+    if (!existingColumns.includes('last_totp_code')) {
+      await run('ALTER TABLE users ADD COLUMN last_totp_code TEXT NULL;');
+    }
+  } catch (err) {
+    console.warn('[DATABASE] Aviso en migración de esquema de usuarios:', err.message);
   }
 }
 
@@ -203,8 +237,8 @@ async function seedDefaultAdmin() {
     const passwordHash = await bcrypt.hash(adminPassword, saltRounds);
 
     const result = await run(
-      `INSERT INTO users (name, email, password_hash, role, status, secret_2fa)
-       VALUES (?, ?, ?, 'Admin', 'Active', NULL)`,
+      `INSERT INTO users (name, email, password_hash, role, status, token_version, secret_2fa, is_2fa_enabled)
+       VALUES (?, ?, ?, 'Admin', 'Active', 1, NULL, 0)`,
       [adminName, adminEmail, passwordHash]
     );
 

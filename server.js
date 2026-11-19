@@ -14,12 +14,25 @@ const speakeasy = require('speakeasy');
 
 const { db, run, get, all, initializeDatabase, addAuditLog } = require('./database');
 const { authenticateToken, requireRole } = require('./authMiddleware');
+const {
+  encrypt2FASecret,
+  decrypt2FASecret,
+  generateBackupCodes,
+  hashBackupCode
+} = require('./cryptoUtils');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Validación estricta de secretos en entorno de producción
+if (NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('❌ [FATAL SECURITY ERROR] process.env.JWT_SECRET no está configurado en producción.');
+  process.exit(1);
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'iam_pymes_super_secret_jwt_key_2026_987654321_secure';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '2h';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h'; // Expiración corta recomendada por AppSec
 
 // -------------------------------------------------------------
 // Middlewares de Seguridad y Comunicación
@@ -108,9 +121,9 @@ app.post('/api/auth/login', async (req, res, next) => {
   const normalizedEmail = String(email).trim().toLowerCase();
 
   try {
-    // 1. Buscar usuario en base de datos
+    // 1. Buscar usuario en base de datos (incluyendo token_version para control de sesiones)
     const user = await get(
-      'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ?',
+      'SELECT id, name, email, password_hash, role, status, token_version FROM users WHERE email = ?',
       [normalizedEmail]
     );
 
@@ -163,14 +176,17 @@ app.post('/api/auth/login', async (req, res, next) => {
       });
     }
 
-    // Caso D: Credenciales válidas -> Generar Token JWT con expiración estricta de 2 horas
+    // Caso D: Credenciales válidas -> Generar Token JWT con algoritmo explícito HS256 y token_version
     const tokenPayload = {
+      sub: user.id,
       id: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      token_version: user.token_version || 1
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, {
+      algorithm: 'HS256',
       expiresIn: JWT_EXPIRES_IN
     });
 
@@ -249,13 +265,16 @@ app.get('/api/auth/me', authenticateToken, async (req, res, next) => {
 app.get('/api/portal/profile', authenticateToken, async (req, res, next) => {
   try {
     const user = await get(
-      'SELECT id, name, email, role, status, secret_2fa, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, status, secret_2fa, is_2fa_enabled, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
     }
+
+    const is2faActive = Boolean(user.is_2fa_enabled);
+    const is2faPending = Boolean(user.secret_2fa && !user.is_2fa_enabled);
 
     return res.status(200).json({
       success: true,
@@ -265,7 +284,9 @@ app.get('/api/portal/profile', authenticateToken, async (req, res, next) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        has2FA: Boolean(user.secret_2fa),
+        has2FA: is2faActive,
+        is2FAEnabled: is2faActive,
+        is2FAPending: is2faPending,
         created_at: user.created_at
       }
     });
@@ -277,6 +298,7 @@ app.get('/api/portal/profile', authenticateToken, async (req, res, next) => {
 /**
  * PUT /api/portal/password
  * Permite al empleado cambiar su propia contraseña validando la contraseña actual.
+ * Incrementa token_version para invalidar cualquier sesión previa de inmediato.
  * Registra evento PASSWORD_CHANGED en audit_logs.
  * Protegido con authenticateToken.
  */
@@ -325,7 +347,11 @@ app.put('/api/portal/password', authenticateToken, async (req, res, next) => {
     const saltRounds = 12;
     const newHash = await bcrypt.hash(newPassword, saltRounds);
 
-    await run('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, userId]);
+    // Actualizar hash de contraseña e incrementar token_version (invalidación de sesiones activas)
+    await run(
+      'UPDATE users SET password_hash = ?, token_version = token_version + 1 WHERE id = ?',
+      [newHash, userId]
+    );
 
     await addAuditLog({
       userEmail,
@@ -337,13 +363,13 @@ app.put('/api/portal/password', authenticateToken, async (req, res, next) => {
         role: userRole,
         ip: ipAddress,
         userId,
-        description: 'Cambio de contraseña realizado exitosamente por el usuario'
+        description: 'Cambio de contraseña realizado exitosamente por el usuario (sesiones previas invalidadas)'
       }
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Contraseña actualizada exitosamente.'
+      message: 'Contraseña actualizada exitosamente. Sus sesiones previas han sido cerradas por seguridad.'
     });
   } catch (error) {
     next(error);
@@ -352,7 +378,7 @@ app.put('/api/portal/password', authenticateToken, async (req, res, next) => {
 
 /**
  * POST /api/portal/2fa/setup
- * Genera clave secreta TOTP compatible con Google Authenticator y la vincula al perfil.
+ * Genera clave secreta TOTP, la cifra en reposo con AES-256-GCM y la vincula en estado pendiente (is_2fa_enabled = 0).
  * Registra evento 2FA_SETUP en audit_logs.
  * Protegido con authenticateToken.
  */
@@ -370,8 +396,14 @@ app.post('/api/portal/2fa/setup', authenticateToken, async (req, res, next) => {
       length: 20
     });
 
-    // Guardar secreto en formato Base32 en la base de datos
-    await run('UPDATE users SET secret_2fa = ? WHERE id = ?', [secret.base32, userId]);
+    // Cifrar el secreto en reposo con AES-256-GCM antes de guardarlo en SQLite
+    const encryptedSecret = encrypt2FASecret(secret.base32);
+
+    // Guardar secreto cifrado con estado pendiente (is_2fa_enabled = 0)
+    await run(
+      'UPDATE users SET secret_2fa = ?, is_2fa_enabled = 0 WHERE id = ?',
+      [encryptedSecret, userId]
+    );
 
     // Registro inmutable en audit_logs
     await addAuditLog({
@@ -384,19 +416,134 @@ app.post('/api/portal/2fa/setup', authenticateToken, async (req, res, next) => {
         role: userRole,
         ip: ipAddress,
         userId,
-        description: 'Segundo factor de autenticación TOTP configurado exitosamente'
+        description: 'Configuración 2FA TOTP inicializada (pendiente de confirmación con código de 6 dígitos)'
       }
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Configuración 2FA TOTP generada exitosamente.',
+      message: 'Configuración 2FA inicializada. Ingrese el código de 6 dígitos de su aplicación para verificar y activar el doble factor.',
       twoFactor: {
         secret: secret.base32,
         otpauth_url: secret.otpauth_url,
-        instructions: 'Escanee la URL o ingrese la clave secreta manualmente en Google Authenticator o Authy.'
+        instructions: 'Escanee la URL o ingrese la clave secreta manualmente en Google Authenticator o Authy y confirme con el código de 6 dígitos.'
       }
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/portal/2fa/verify
+ * Confirma y activa el segundo factor de autenticación TOTP (Flujo seguro en 2 pasos).
+ * Valida un código de 6 dígitos con tolerancia window: 1, previene el reuso
+ * del mismo código TOTP, activa is_2fa_enabled = 1 y devuelve códigos de respaldo de un solo uso.
+ * Protegido con authenticateToken.
+ */
+app.post('/api/portal/2fa/verify', authenticateToken, async (req, res, next) => {
+  const { code } = req.body;
+  const userId = req.user.id;
+  const userEmail = req.user.email;
+  const userRole = req.user.role;
+  const ipAddress = req.clientIp;
+
+  if (!code || !/^\d{6}$/.test(String(code).trim())) {
+    return res.status(400).json({
+      success: false,
+      error: 'Debe suministrar un código TOTP numérico de 6 dígitos válido.'
+    });
+  }
+
+  const cleanCode = String(code).trim();
+
+  try {
+    const user = await get(
+      'SELECT id, email, secret_2fa, is_2fa_enabled, last_totp_code FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user || !user.secret_2fa) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se ha iniciado la configuración 2FA. Primero debe llamar a POST /api/portal/2fa/setup.'
+      });
+    }
+
+    // Prevención de reuso de código en la misma ventana de tiempo
+    if (user.last_totp_code && user.last_totp_code === cleanCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Este código TOTP ya fue utilizado. Por seguridad, espere 30 segundos al siguiente ciclo.'
+      });
+    }
+
+    // Descifrar el secreto almacenado en reposo con AES-256-GCM
+    const decryptedSecret = decrypt2FASecret(user.secret_2fa);
+
+    // Verificación de código TOTP con tolerancia window: 1
+    const isCodeValid = speakeasy.totp.verify({
+      secret: decryptedSecret,
+      encoding: 'base32',
+      token: cleanCode,
+      window: 1
+    });
+
+    if (!isCodeValid) {
+      await addAuditLog({
+        userEmail,
+        action: '2FA_VERIFICATION_FAILED',
+        ipAddress,
+        details: {
+          action: '2FA_VERIFICATION_FAILED',
+          affectedEmail: userEmail,
+          role: userRole,
+          ip: ipAddress,
+          userId,
+          description: 'Código TOTP incorrecto o fuera de sincronización en intento de confirmación'
+        }
+      });
+
+      return res.status(400).json({
+        success: false,
+        error: 'Código TOTP incorrecto o expirado. Verifique la hora de su dispositivo e intente nuevamente.'
+      });
+    }
+
+    // Generar códigos de respaldo de un solo uso
+    const plainBackupCodes = generateBackupCodes(8);
+    const hashedBackupCodes = plainBackupCodes.map((c) => hashBackupCode(c));
+
+    // Activar 2FA, registrar códigos de respaldo y guardar último código usado
+    await run(
+      'UPDATE users SET is_2fa_enabled = 1, backup_codes = ?, last_totp_code = ? WHERE id = ?',
+      [JSON.stringify(hashedBackupCodes), cleanCode, userId]
+    );
+
+    // Registro inmutable de auditoría
+    await addAuditLog({
+      userEmail,
+      action: '2FA_ENABLED',
+      ipAddress,
+      details: {
+        action: '2FA_ENABLED',
+        affectedEmail: userEmail,
+        role: userRole,
+        ip: ipAddress,
+        userId,
+        backupCodesCount: plainBackupCodes.length,
+        description: 'Doble factor de autenticación TOTP verificado y activado exitosamente'
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Doble factor de autenticación (2FA) verificado y activado exitosamente.',
+      is2FAEnabled: true,
+      backupCodes: plainBackupCodes,
+      instructions: 'Guarde estos códigos de respaldo en un lugar seguro. Solo se mostrarán esta vez.'
+    });
+
   } catch (error) {
     next(error);
   }
@@ -498,10 +645,10 @@ app.post('/api/users', authenticateToken, requireRole('Admin'), async (req, res,
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // 6. Insertar en la base de datos
+    // 6. Insertar en la base de datos (inicia con token_version = 1 e is_2fa_enabled = 0)
     const result = await run(
-      `INSERT INTO users (name, email, password_hash, role, status, secret_2fa)
-       VALUES (?, ?, ?, ?, 'Active', NULL)`,
+      `INSERT INTO users (name, email, password_hash, role, status, token_version, secret_2fa, is_2fa_enabled)
+       VALUES (?, ?, ?, ?, 'Active', 1, NULL, 0)`,
       [cleanName, normalizedEmail, passwordHash, role]
     );
 
@@ -681,8 +828,8 @@ app.put('/api/users/:id/revoke', authenticateToken, requireRole('Admin'), async 
       });
     }
 
-    // 3. Desactivación inmediata en SQLite
-    await run("UPDATE users SET status = 'Revoked' WHERE id = ?", [userId]);
+    // 3. Desactivación inmediata e incremento de token_version en SQLite (Offboarding Express)
+    await run("UPDATE users SET status = 'Revoked', token_version = token_version + 1 WHERE id = ?", [userId]);
 
     // 4. Registro inmutable en audit_logs
     await addAuditLog({
@@ -831,6 +978,7 @@ async function startServer() {
       console.log(`   - GET  /api/portal/profile -> Perfil del Empleado (Protegido)`);
       console.log(`   - PUT  /api/portal/password -> Cambio de Contraseña (Protegido)`);
       console.log(`   - POST /api/portal/2fa/setup -> Configuración 2FA TOTP (Protegido)`);
+      console.log(`   - POST /api/portal/2fa/verify -> Confirmación y Activación 2FA TOTP (Protegido)`);
       console.log(`   - GET  /api/users        -> Listado de Usuarios (Solo Admin)`);
       console.log(`   - POST /api/users        -> Creación de Usuario (Solo Admin)`);
       console.log(`   - PUT  /api/users/:id/role -> Cambio de Rol (Solo Admin)`);

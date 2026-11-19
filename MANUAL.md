@@ -231,26 +231,62 @@ curl -i -X GET http://localhost:3000/api/portal/profile \
 - **Código HTTP esperado**: `200 OK`
 - **Respuesta**: Indica `has2FA: false` antes de la configuración.
 
-#### C. Configurar Segundo Factor de Autenticación TOTP (2FA)
+#### C. Configurar Segundo Factor de Autenticación TOTP (2FA - Paso 1: Inicialización)
 ```bash
 curl -i -X POST http://localhost:3000/api/portal/2fa/setup \
   -H "Authorization: Bearer <EMPLEADO_TOKEN>"
 ```
 - **Código HTTP esperado**: `200 OK`
+- **Seguridad en Reposo**: La clave secreta se almacena cifrada en SQLite mediante **AES-256-GCM** (`enc:v1:...`) y su estado inicial queda en pendiente (`is_2fa_enabled = 0`) hasta confirmarse.
 - **Respuesta**:
 ```json
 {
   "success": true,
-  "message": "Configuración 2FA TOTP generada exitosamente.",
+  "message": "Configuración 2FA inicializada. Ingrese el código de 6 dígitos de su aplicación para verificar y activar el doble factor.",
   "twoFactor": {
     "secret": "JBSWY3DPEHPK3PXP...",
     "otpauth_url": "otpauth://totp/IAM-Pymes:carlos.mendoza@pymes.local?secret=...",
-    "instructions": "Escanee la URL o ingrese la clave secreta manualmente en Google Authenticator o Authy."
+    "instructions": "Escanee la URL o ingrese la clave secreta manualmente en Google Authenticator o Authy y confirme con el código de 6 dígitos."
   }
 }
 ```
 
-#### D. Cambio de contraseña por el propio empleado
+#### D. Confirmar y Activar Segundo Factor TOTP (2FA - Paso 2: Verificación y Códigos de Respaldo)
+*(Ingrese el código de 6 dígitos generado en su aplicación de autenticación, por ejemplo `123456`)*:
+```bash
+curl -i -X POST http://localhost:3000/api/portal/2fa/verify \
+  -H "Authorization: Bearer <EMPLEADO_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "123456"}'
+```
+- **Código HTTP esperado**: `200 OK`
+- **Mecanismos AppSec**:
+  - Validación TOTP estricta de 6 dígitos con ventana de tolerancia `window: 1`.
+  - Descifrado seguro en memoria del secreto AES-256-GCM.
+  - Prevención de reuso del mismo código en el ciclo de 30 segundos (*Anti-Replay Protection* mediante `last_totp_code`).
+  - Activación formal (`is_2fa_enabled = 1`).
+  - Generación de 8 códigos de respaldo de un solo uso (`XXXX-XXXX`) almacenados hasheados con **SHA-256**.
+- **Respuesta**:
+```json
+{
+  "success": true,
+  "message": "Doble factor de autenticación (2FA) verificado y activado exitosamente.",
+  "is2FAEnabled": true,
+  "backupCodes": [
+    "A1B2-C3D4",
+    "E5F6-G7H8",
+    "I9J0-K1L2",
+    "M3N4-O5P6",
+    "Q7R8-S9T0",
+    "U1V2-W3X4",
+    "Y5Z6-A7B8",
+    "C9D0-E1F2"
+  ],
+  "instructions": "Guarde estos códigos de respaldo en un lugar seguro. Solo se mostrarán esta vez."
+}
+```
+
+#### E. Cambio de contraseña por el propio empleado (Con Invalidación de Sesión Inmediata)
 ```bash
 curl -i -X PUT http://localhost:3000/api/portal/password \
   -H "Authorization: Bearer <EMPLEADO_TOKEN>" \
@@ -261,7 +297,8 @@ curl -i -X PUT http://localhost:3000/api/portal/password \
   }'
 ```
 - **Código HTTP esperado**: `200 OK`
-- **Respuesta**: `{"success": true, "message": "Contraseña actualizada exitosamente."}`
+- **Efecto de Seguridad**: Incrementa el campo numérico `token_version` en la base de datos, provocando que cualquier JWT emitido previamente con la versión anterior sea rechazado de inmediato (`HTTP 401 Unauthorized`).
+- **Respuesta**: `{"success": true, "message": "Contraseña actualizada exitosamente. Sus sesiones previas han sido cerradas por seguridad."}`
 
 ---
 
@@ -381,4 +418,6 @@ Ejemplo de registro real devuelto:
 | **2. Códigos de Estado HTTP Correctos** | ✅ Cumplido | Uso estricto de `200` (OK), `201` (Created), `400` (Bad Request), `401` (Unauthorized), `403` (Forbidden) y `409` (Conflict en duplicados). |
 | **3. Auditoría Descriptiva (`audit_logs`)** | ✅ Cumplido | El campo `details` incluye siempre de forma estructurada: `action`, `affectedEmail`, `role`, `ip` y descripción forense. |
 | **4. Manual y Credenciales (`MANUAL.md`)** | ✅ Cumplido | Documentación completa con instrucciones paso a paso, credenciales por defecto y comandos de prueba funcionales. |
+| **5. Endurecimiento JWT y `token_version`** | ✅ Cumplido | Firma con `HS256`, payload con `sub`, `role` y `token_version`. Invalidación inmediata en DB tras cambio de clave o revocación (`HTTP 401`). |
+| **6. Doble Factor en 2 Pasos y AES-256-GCM** | ✅ Cumplido | Setup genera secreto Base32 cifrado en reposo con AES-256-GCM (`enc:v1:`). Verificación con tolerancia `window: 1`, prevención de replay y códigos de respaldo hasheados con SHA-256. |
 
