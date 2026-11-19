@@ -8,7 +8,7 @@
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -17,11 +17,13 @@
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
             brand: {
               50: '#eef2ff',
               100: '#e0e7ff',
+              200: '#c7d2fe',
               500: '#6366f1',
               600: '#4f46e5',
               700: '#4338ca',
@@ -34,92 +36,227 @@
     }
   </script>
   <style>
-    /* Estilos adicionales para detalles interactivos */
-    .fade-in {
-      animation: fadeIn 0.25s ease-out forwards;
+    /* Fondo con gradientes sutiles y modernos */
+    body {
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 0.5) 0%, transparent 100%);
+      background-attachment: fixed;
     }
 
+    /* Animaciones principales */
     @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
       from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(12px);
       }
-
       to {
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+      70% {
+        transform: scale(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+    }
+
+    @keyframes toastProgress {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+
+    @keyframes attentionSwing {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-8deg); }
+      75% { transform: rotate(8deg); }
+    }
+
+    /* Clases de utilidad para animaciones */
+    .animate-fade-in {
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-pop-in {
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-shake {
+      animation: shake 0.45s ease-in-out;
+    }
+
+    .animate-pulse-glow {
+      animation: pulseGlow 2s infinite;
+    }
+
+    .animate-attention {
+      animation: attentionSwing 1.5s ease-in-out infinite;
+    }
+
+    .shimmer-effect {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* Toast con barra de progreso */
+    .toast-item {
+      animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast-item.exiting {
+      animation: slideOutRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast-progress {
+      animation: toastProgress 4s linear forwards;
+    }
+
+    /* Suavizado en tablas y tarjetas */
+    .interactive-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .interactive-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    }
+
+    .table-row-hover {
+      transition: background-color 0.15s ease;
+    }
+    .table-row-hover:hover {
+      background-color: rgba(248, 250, 252, 0.9);
     }
   </style>
 </head>
 
 <body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
 
-  <!-- Toast de Notificaciones -->
-  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+  <!-- ======================================================== -->
+  <!-- CONTENEDOR DE TOASTS FLOTANTES                            -->
+  <!-- ======================================================== -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2.5 pointer-events-none max-w-sm w-full"></div>
 
   <!-- ======================================================== -->
-  <!-- 1. VISTA DE AUTENTICACIÓN (LOGIN)                        -->
+  <!-- 1. VISTA DE AUTENTICACIÓN (LOGIN CON ANIMACIONES)        -->
   <!-- ======================================================== -->
   <div id="view-login" class="flex-1 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md animate-fade-in-up">
       <!-- Logo y Título -->
       <div class="flex justify-center">
-        <div
-          class="h-14 w-14 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30 text-white text-2xl font-bold">
-          🛡️
+        <div class="relative group">
+          <div class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-brand-600 to-emerald-500 opacity-30 blur group-hover:opacity-60 transition duration-500"></div>
+          <div class="relative h-16 w-16 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30 text-white text-3xl font-bold transition transform group-hover:scale-105 duration-300">
+            🛡️
+          </div>
         </div>
       </div>
-      <h2 class="mt-4 text-center text-2xl font-bold tracking-tight text-slate-900">
+      <h2 class="mt-5 text-center text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
         IAM Ligero para Pymes
       </h2>
-      <p class="mt-1 text-center text-sm text-slate-500">
-        Gestión de Identidades, RBAC y Offboarding Express
+      <p class="mt-1.5 text-center text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+        Autenticación Robusta, RBAC en Tiempo Real y Offboarding Express
       </p>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-      <div class="bg-white py-8 px-6 shadow-sm border border-slate-200/80 rounded-2xl sm:px-10">
+      <div id="login-card" class="bg-white/90 backdrop-blur-sm py-8 px-6 shadow-xl shadow-slate-200/50 border border-slate-200/80 rounded-3xl sm:px-10 animate-fade-in-up transition-all duration-300">
 
-        <!-- Banner de Error de Autenticación -->
-        <div id="login-error-alert"
-          class="hidden mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+        <!-- Banner de Error de Autenticación con Animación -->
+        <div id="login-error-alert" class="hidden mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-start gap-2.5 animate-pop-in">
           <span class="text-base leading-none">⚠️</span>
           <span id="login-error-text" class="flex-1 font-medium">Credenciales inválidas</span>
         </div>
 
         <form id="login-form" class="space-y-5">
           <div>
-            <label for="login-email" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <label for="login-email" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               Correo Electrónico
             </label>
-            <div class="mt-1.5 relative">
+            <div class="relative">
               <input id="login-email" type="email" required autocomplete="email" placeholder="ej. admin@iam-pymes.local"
-                class="block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition">
+                class="block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all duration-200">
             </div>
           </div>
 
           <div>
-            <label for="login-password" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <label for="login-password" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
               Contraseña
             </label>
-            <div class="mt-1.5 relative">
-              <input id="login-password" type="password" required autocomplete="current-password"
-                placeholder="••••••••••••"
-                class="block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition pr-10">
+            <div class="relative">
+              <input id="login-password" type="password" required autocomplete="current-password" placeholder="••••••••••••"
+                class="block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all duration-200 pr-10">
               <button type="button" id="toggle-login-pass"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs">
-                👁️
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                title="Mostrar/Ocultar Contraseña">
+                <span id="eye-icon">👁️</span>
               </button>
             </div>
           </div>
 
-          <div>
+          <div class="pt-1">
             <button type="submit" id="login-submit-btn"
-              class="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition disabled:opacity-50">
-              <span id="login-btn-text">Iniciar Sesión</span>
-              <svg id="login-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none"
-                viewBox="0 0 24 24">
+              class="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-md shadow-brand-500/20 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all duration-200 active:scale-[0.98] disabled:opacity-50">
+              <span id="login-btn-text">Iniciar Sesión Segura</span>
+              <svg id="login-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
               </svg>
@@ -127,19 +264,22 @@
           </div>
         </form>
 
-        <!-- Accesos Rápidos de Prueba (Demo) -->
+        <!-- Accesos Rápidos de Prueba (Demo con Animación Flash) -->
         <div class="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500">
-          <p class="font-semibold text-slate-700 mb-2">Credenciales operativas por defecto:</p>
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
+          <p class="font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+            <span>🔑</span> <span>Credenciales operativas por defecto:</span>
+          </p>
+          <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/70 space-y-1.5 transition">
             <div class="flex justify-between items-center">
-              <span>Admin: <strong class="text-slate-700">admin@iam-pymes.local</strong></span>
+              <span class="text-slate-700 font-medium">Admin: <strong class="text-brand-700">admin@iam-pymes.local</strong></span>
               <button type="button" onclick="fillCredentials('admin@iam-pymes.local', 'AdminPass123!*Segura')"
-                class="text-brand-600 hover:underline font-medium">
-                Cargar
+                class="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-semibold transition active:scale-95">
+                Cargar Demo
               </button>
             </div>
-            <div class="text-[11px] text-slate-400">Clave: <code
-                class="font-mono bg-slate-200/70 px-1 py-0.5 rounded text-slate-600">AdminPass123!*Segura</code></div>
+            <div class="text-[11px] text-slate-400">
+              Clave: <code class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-700">AdminPass123!*Segura</code>
+            </div>
           </div>
         </div>
 
@@ -152,39 +292,38 @@
   <!-- ======================================================== -->
   <div id="view-app" class="hidden flex-1 flex flex-col">
     <!-- Barra Superior de Navegación -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center space-x-3">
-            <div
-              class="h-9 w-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+            <div class="h-9 w-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-brand-500/30">
               🛡️
             </div>
             <div>
               <span class="text-base font-bold text-slate-900 tracking-tight">IAM Pymes</span>
-              <span
-                class="hidden sm:inline-block ml-2 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">v1.0.0</span>
+              <span class="hidden sm:inline-block ml-2 text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+                v1.0.0 Pro
+              </span>
             </div>
           </div>
 
           <!-- Información del Usuario y Logout -->
           <div class="flex items-center space-x-4">
             <div class="text-right">
-              <div id="user-display-name" class="text-sm font-semibold text-slate-900 leading-tight">Usuario</div>
-              <div class="flex items-center justify-end space-x-1.5">
-                <span id="user-display-email" class="text-xs text-slate-500">correo@pymes.local</span>
-                <span id="user-display-role-badge"
-                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-100 text-brand-800">
+              <div id="user-display-name" class="text-sm font-bold text-slate-900 leading-tight">Usuario</div>
+              <div class="flex items-center justify-end space-x-1.5 mt-0.5">
+                <span id="user-display-email" class="text-xs text-slate-500 font-mono">correo@pymes.local</span>
+                <span id="user-display-role-badge" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-100 text-brand-800">
                   Admin
                 </span>
               </div>
             </div>
 
             <button type="button" id="btn-logout"
-              class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-xs font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 hover:text-red-600 transition shadow-sm"
+              class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-xs font-semibold rounded-xl text-slate-700 bg-white hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all duration-200 shadow-xs active:scale-95"
               title="Cerrar Sesión Segura">
               <span>Salir</span>
-              <span class="ml-1.5 text-slate-400">🚪</span>
+              <span class="ml-1.5 text-xs">🚪</span>
             </button>
           </div>
         </div>
@@ -192,23 +331,23 @@
     </header>
 
     <!-- Pestañas de Navegación para el Administrador -->
-    <div id="admin-tabs-nav" class="bg-white border-b border-slate-200/80">
+    <div id="admin-tabs-nav" class="bg-white border-b border-slate-200/80 sticky top-16 z-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav class="flex space-x-6 -mb-px" aria-label="Tabs">
           <button type="button" id="tab-btn-users" onclick="switchAdminTab('users')"
-            class="tab-link border-brand-600 text-brand-600 whitespace-nowrap py-3.5 px-1 border-b-2 font-semibold text-sm flex items-center gap-2">
+            class="tab-link border-brand-600 text-brand-600 whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all">
             <span>👥 Gestión de Usuarios</span>
-            <span id="users-count-badge" class="bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full text-xs">0</span>
+            <span id="users-count-badge" class="bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full text-xs font-mono">0</span>
           </button>
 
           <button type="button" id="tab-btn-audit" onclick="switchAdminTab('audit')"
-            class="tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+            class="tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all">
             <span>📜 Bitácora de Auditoría</span>
-            <span id="audit-count-badge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs">0</span>
+            <span id="audit-count-badge" class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-mono">0</span>
           </button>
 
           <button type="button" id="tab-btn-profile" onclick="switchAdminTab('profile')"
-            class="tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2">
+            class="tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all">
             <span>👤 Mi Perfil y Seguridad</span>
           </button>
         </nav>
@@ -221,19 +360,19 @@
       <!-- ======================================================== -->
       <!-- SECCIÓN A: PANEL DEL ADMINISTRADOR - GESTIÓN DE USUARIOS -->
       <!-- ======================================================== -->
-      <div id="admin-sec-users" class="space-y-8 fade-in">
+      <div id="admin-sec-users" class="space-y-8 animate-fade-in-up">
 
         <!-- Bloque Superior: Encabezado y Acción Rápida -->
-        <div class="md:flex md:items-center md:justify-between border-b border-slate-200 pb-5">
+        <div class="md:flex md:items-center md:justify-between border-b border-slate-200/80 pb-5">
           <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Directorio de Identidades y Accesos</h1>
-            <p class="text-sm text-slate-500 mt-1">
-              Supervisión de cuentas activas, control RBAC y revocación inmediata de accesos (Offboarding Express).
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Directorio de Identidades y Accesos</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Supervisión de cuentas activas, control RBAC y revocación en tiempo real (Offboarding Express).
             </p>
           </div>
           <div class="mt-4 md:mt-0 flex gap-2">
             <button type="button" onclick="loadUsersTable()"
-              class="inline-flex items-center px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+              class="inline-flex items-center px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-xs active:scale-95">
               <span class="mr-1.5">🔄</span> Refrescar
             </button>
           </div>
@@ -243,42 +382,39 @@
 
           <!-- Formulario de Alta de Nuevo Empleado (Columna Izquierda / 1 Columna) -->
           <div class="lg:col-span-1">
-            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sticky top-24">
-              <div class="flex items-center gap-2.5 mb-4">
-                <span class="p-2 bg-indigo-50 text-brand-600 rounded-lg text-lg">➕</span>
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sticky top-36 interactive-card">
+              <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100">
+                <span class="p-2.5 bg-brand-50 text-brand-600 rounded-xl text-lg">➕</span>
                 <div>
-                  <h3 class="text-base font-bold text-slate-900 leading-tight">Alta de Usuario</h3>
-                  <p class="text-xs text-slate-500">Crea identidades con rol y hash seguro</p>
+                  <h3 class="text-base font-bold text-slate-900 leading-tight">Alta de Identidad</h3>
+                  <p class="text-xs text-slate-500">Crea identidades con hash bcrypt (cost 12)</p>
                 </div>
               </div>
 
               <form id="create-user-form" class="space-y-4">
                 <div>
-                  <label for="new-user-name" class="block text-xs font-semibold text-slate-700">Nombre Completo</label>
+                  <label for="new-user-name" class="block text-xs font-bold text-slate-700 mb-1">Nombre Completo</label>
                   <input type="text" id="new-user-name" required placeholder="ej. María Morales"
-                    class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                    class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
                 </div>
 
                 <div>
-                  <label for="new-user-email" class="block text-xs font-semibold text-slate-700">Correo
-                    Corporativo</label>
+                  <label for="new-user-email" class="block text-xs font-bold text-slate-700 mb-1">Correo Corporativo</label>
                   <input type="email" id="new-user-email" required placeholder="ej. maria@pymes.local"
-                    class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                    class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
                 </div>
 
                 <div>
-                  <label for="new-user-password" class="block text-xs font-semibold text-slate-700">Contraseña
-                    Inicial</label>
+                  <label for="new-user-password" class="block text-xs font-bold text-slate-700 mb-1">Contraseña Inicial</label>
                   <input type="password" id="new-user-password" required minlength="8" placeholder="Mínimo 8 caracteres"
-                    class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
-                  <p class="text-[11px] text-slate-400 mt-1">Cifrada automáticamente con bcrypt (cost factor 12).</p>
+                    class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
+                  <p class="text-[11px] text-slate-400 mt-1">Cifrada automáticamente con bcrypt.</p>
                 </div>
 
                 <div>
-                  <label for="new-user-role" class="block text-xs font-semibold text-slate-700">Rol Asignado
-                    (RBAC)</label>
+                  <label for="new-user-role" class="block text-xs font-bold text-slate-700 mb-1">Rol Asignado (RBAC)</label>
                   <select id="new-user-role"
-                    class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                    class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
                     <option value="Employee" selected>Employee (Empleado Estándar)</option>
                     <option value="Admin">Admin (Administrador IAM)</option>
                   </select>
@@ -286,7 +422,7 @@
 
                 <div class="pt-2">
                   <button type="submit" id="btn-create-user"
-                    class="w-full inline-flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                    class="w-full inline-flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition active:scale-[0.98]">
                     Crear y Registrar Identidad
                   </button>
                 </div>
@@ -296,37 +432,33 @@
 
           <!-- Tabla de Inventario de Usuarios (Columna Derecha / 2 Columnas) -->
           <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden interactive-card">
               <div class="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
                 <div>
                   <h3 class="text-sm font-bold text-slate-900">Usuarios Registrados</h3>
-                  <p class="text-xs text-slate-500">Validación de sesiones activas e invalidación en tiempo real</p>
+                  <p class="text-xs text-slate-500">Sesiones activas e invalidación en tiempo real</p>
                 </div>
                 <div class="relative w-48 sm:w-64">
                   <input type="text" id="filter-users-input" placeholder="Buscar por email..."
                     oninput="filterUsersTable()"
-                    class="w-full text-xs rounded-lg border border-slate-200 py-1.5 px-2.5 pl-7 focus:outline-none focus:border-brand-500">
+                    class="w-full text-xs rounded-xl border border-slate-200 py-1.5 px-2.5 pl-8 focus:outline-none focus:border-brand-500 transition">
                   <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
                 </div>
               </div>
 
               <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-                  <thead class="bg-slate-50/80 text-slate-600 font-semibold uppercase tracking-wider">
+                  <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase tracking-wider">
                     <tr>
-                      <th class="py-3 px-4">Usuario</th>
-                      <th class="py-3 px-4">Rol</th>
-                      <th class="py-3 px-4">Estado</th>
-                      <th class="py-3 px-4">Creado</th>
-                      <th class="py-3 px-4 text-right">Acción de Seguridad</th>
+                      <th class="py-3.5 px-4">Usuario</th>
+                      <th class="py-3.5 px-4">Rol</th>
+                      <th class="py-3.5 px-4">Estado</th>
+                      <th class="py-3.5 px-4">Creado</th>
+                      <th class="py-3.5 px-4 text-right">Acción de Seguridad</th>
                     </tr>
                   </thead>
                   <tbody id="users-table-body" class="divide-y divide-slate-100 text-slate-700">
-                    <tr>
-                      <td colspan="5" class="py-8 text-center text-slate-400">
-                        Cargando inventario de identidades...
-                      </td>
-                    </tr>
+                    <!-- Filas cargadas dinámicamente con esqueleto shimmer -->
                   </tbody>
                 </table>
               </div>
@@ -339,49 +471,42 @@
       <!-- ======================================================== -->
       <!-- SECCIÓN B: PANEL DEL ADMINISTRADOR - BITÁCORA AUDITORÍA  -->
       <!-- ======================================================== -->
-      <div id="admin-sec-audit" class="hidden space-y-6 fade-in">
-        <div class="md:flex md:items-center md:justify-between border-b border-slate-200 pb-5">
+      <div id="admin-sec-audit" class="hidden space-y-6 animate-fade-in-up">
+        <div class="md:flex md:items-center md:justify-between border-b border-slate-200/80 pb-5">
           <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Registro Inmutable de Auditoría Forense</h1>
-            <p class="text-sm text-slate-500 mt-1">
-              Trazabilidad criptográfica de inicios de sesión, offboarding express, alta de usuarios y cambios de
-              credenciales.
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Registro Inmutable de Auditoría Forense</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Trazabilidad criptográfica de logins, offboarding express, altas de usuarios y 2FA.
             </p>
           </div>
           <div class="mt-4 md:mt-0 flex gap-2">
             <button type="button" onclick="loadAuditLogsTable()"
-              class="inline-flex items-center px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+              class="inline-flex items-center px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-xs active:scale-95">
               <span class="mr-1.5">🔄</span> Actualizar Bitácora
             </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden interactive-card">
           <div class="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
-            <span class="text-xs font-semibold text-slate-500">Últimos eventos registrados en <code
-                class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">audit_logs</code></span>
-            <div class="text-xs text-slate-400">Total: <span id="audit-table-total"
-                class="font-bold text-slate-600">0</span> eventos</div>
+            <span class="text-xs font-semibold text-slate-500">Eventos en <code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-700 font-bold">audit_logs</code></span>
+            <div class="text-xs text-slate-400">Total: <span id="audit-table-total" class="font-bold text-slate-700 font-mono">0</span> eventos</div>
           </div>
 
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
-              <thead class="bg-slate-50/80 text-slate-600 font-semibold uppercase tracking-wider">
+              <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase tracking-wider">
                 <tr>
-                  <th class="py-3 px-4">ID</th>
-                  <th class="py-3 px-4">Fecha y Hora</th>
-                  <th class="py-3 px-4">Acción</th>
-                  <th class="py-3 px-4">Usuario Ejecutor</th>
-                  <th class="py-3 px-4">IP Cliente</th>
-                  <th class="py-3 px-4">Detalles Auditables</th>
+                  <th class="py-3.5 px-4">ID</th>
+                  <th class="py-3.5 px-4">Fecha y Hora</th>
+                  <th class="py-3.5 px-4">Acción</th>
+                  <th class="py-3.5 px-4">Ejecutor</th>
+                  <th class="py-3.5 px-4">IP Cliente</th>
+                  <th class="py-3.5 px-4">Detalles Estructurados</th>
                 </tr>
               </thead>
               <tbody id="audit-table-body" class="divide-y divide-slate-100 text-slate-700 font-mono text-[11px]">
-                <tr>
-                  <td colspan="6" class="py-8 text-center text-slate-400 font-sans">
-                    Cargando bitácora de auditoría...
-                  </td>
-                </tr>
+                <!-- Registros cargados con esqueleto shimmer -->
               </tbody>
             </table>
           </div>
@@ -391,90 +516,85 @@
       <!-- ======================================================== -->
       <!-- SECCIÓN C: PORTAL DEL EMPLEADO / MI PERFIL               -->
       <!-- ======================================================== -->
-      <div id="sec-employee-portal" class="space-y-8 fade-in">
-        <div class="border-b border-slate-200 pb-5">
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Portal del Empleado & Autoservicio Seguro</h1>
-          <p class="text-sm text-slate-500 mt-1">
-            Gestión personal de credenciales de acceso y segundo factor de autenticación (2FA).
+      <div id="sec-employee-portal" class="space-y-8 animate-fade-in-up">
+        <div class="border-b border-slate-200/80 pb-5">
+          <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Portal del Empleado & Autoservicio Seguro</h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">
+            Gestión personal de credenciales, invalidación de sesiones y segundo factor de autenticación (2FA).
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
           <!-- Tarjeta 1: Ficha de Perfil -->
-          <div class="md:col-span-1 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
-            <div class="flex items-center space-x-3 pb-4 border-b border-slate-100">
-              <div
-                class="h-12 w-12 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center text-xl font-bold">
+          <div class="md:col-span-1 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4 interactive-card">
+            <div class="flex items-center space-x-3.5 pb-4 border-b border-slate-100">
+              <div class="h-12 w-12 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center text-xl font-bold shadow-xs">
                 👤
               </div>
               <div>
                 <h3 id="profile-name" class="font-bold text-slate-900 leading-snug">Cargando...</h3>
-                <p id="profile-email" class="text-xs text-slate-500">cargando@pymes.local</p>
+                <p id="profile-email" class="text-xs text-slate-500 font-mono">cargando@pymes.local</p>
               </div>
             </div>
 
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500">Rol de Sistema:</span>
-                <span id="profile-role"
-                  class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Employee</span>
+                <span class="text-slate-500 font-medium">Rol de Sistema:</span>
+                <span id="profile-role" class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">Employee</span>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500">Estado de Identidad:</span>
-                <span id="profile-status"
-                  class="inline-flex items-center px-2 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700">
+                <span class="text-slate-500 font-medium">Estado de Identidad:</span>
+                <span id="profile-status" class="inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-emerald-50 text-emerald-700">
                   ● Activo
                 </span>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500">Segundo Factor (2FA):</span>
-                <span id="profile-2fa-status"
-                  class="inline-flex items-center px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-600">
+                <span class="text-slate-500 font-medium">Segundo Factor (2FA):</span>
+                <span id="profile-2fa-status" class="inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-slate-100 text-slate-600">
                   Comprobando...
                 </span>
               </div>
               <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500">Fecha de Alta:</span>
+                <span class="text-slate-500 font-medium">Fecha de Alta:</span>
                 <span id="profile-created" class="text-slate-700 font-mono">-</span>
               </div>
             </div>
           </div>
 
           <!-- Tarjeta 2: Cambio de Contraseña -->
-          <div class="md:col-span-1 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6">
-            <div class="flex items-center gap-2 mb-4">
-              <span class="p-2 bg-amber-50 text-amber-700 rounded-lg text-lg">🔑</span>
+          <div class="md:col-span-1 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 interactive-card">
+            <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100">
+              <span class="p-2.5 bg-amber-50 text-amber-700 rounded-xl text-lg">🔑</span>
               <div>
                 <h3 class="text-sm font-bold text-slate-900">Actualizar Contraseña</h3>
-                <p class="text-xs text-slate-500">Validación de clave actual y política de 8+ caracteres</p>
+                <p class="text-xs text-slate-500">Invalida sesiones activas inmediatamente</p>
               </div>
             </div>
 
-            <form id="change-pass-form" class="space-y-4">
+            <form id="change-pass-form" class="space-y-3.5">
               <div>
-                <label for="pass-current" class="block text-xs font-semibold text-slate-700">Contraseña Actual</label>
+                <label for="pass-current" class="block text-xs font-bold text-slate-700 mb-1">Contraseña Actual</label>
                 <input type="password" id="pass-current" required
-                  class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                  class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
               </div>
 
               <div>
-                <label for="pass-new" class="block text-xs font-semibold text-slate-700">Nueva Contraseña</label>
+                <label for="pass-new" class="block text-xs font-bold text-slate-700 mb-1">Nueva Contraseña</label>
                 <input type="password" id="pass-new" required minlength="8"
-                  class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
-                <p class="text-[11px] text-slate-400 mt-1">Mínimo 8 caracteres, diferente a la actual.</p>
+                  class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
+                <p class="text-[11px] text-slate-400 mt-1">Mínimo 8 caracteres.</p>
               </div>
 
               <div>
-                <label for="pass-confirm" class="block text-xs font-semibold text-slate-700">Confirmar Nueva
-                  Contraseña</label>
+                <label for="pass-confirm" class="block text-xs font-bold text-slate-700 mb-1">Confirmar Nueva Contraseña</label>
                 <input type="password" id="pass-confirm" required minlength="8"
-                  class="mt-1 block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                  class="block w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
               </div>
 
               <div class="pt-2">
                 <button type="submit" id="btn-submit-pass"
-                  class="w-full inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-xl shadow-sm text-xs font-semibold text-white bg-slate-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-slate-700 transition">
+                  class="w-full inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-xl shadow-sm text-xs font-bold text-white bg-slate-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-slate-700 transition active:scale-[0.98]">
                   Guardar Nueva Contraseña
                 </button>
               </div>
@@ -482,63 +602,62 @@
           </div>
 
           <!-- Tarjeta 3: Configuración 2FA TOTP (Flujo en 2 Pasos) -->
-          <div
-            class="md:col-span-1 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 flex flex-col justify-between">
+          <div class="md:col-span-1 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 flex flex-col justify-between interactive-card">
             <div class="space-y-4">
-              <div class="flex items-center gap-2">
-                <span class="p-2 bg-emerald-50 text-emerald-700 rounded-lg text-lg">📱</span>
+              <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <span class="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-lg">📱</span>
                 <div>
                   <h3 class="text-sm font-bold text-slate-900">Doble Factor (2FA TOTP)</h3>
-                  <p class="text-xs text-slate-500">Google Authenticator, Authy o 1Password</p>
+                  <p class="text-xs text-slate-500">Google Authenticator o Authy</p>
                 </div>
               </div>
 
               <p class="text-xs text-slate-600 leading-relaxed">
-                El segundo factor de autenticación añade una capa de defensa criptográfica con claves efímeras de 30
-                segundos y cifrado en reposo AES-256-GCM.
+                Capa de defensa criptográfica con códigos efímeros de 30s y secretos cifrados en reposo con <strong class="text-slate-800">AES-256-GCM</strong>.
               </p>
 
               <!-- Estado 2FA Activo -->
-              <div id="box-2fa-active" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
-                <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
-                  <span>🛡️</span> <span>2FA Activo y Protegido</span>
+              <div id="box-2fa-active" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-1 animate-pop-in">
+                <div class="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse-glow"></span>
+                  <span>2FA Activo y Protegido</span>
                 </div>
-                <p class="text-[11px] text-emerald-700">Tu cuenta tiene el segundo factor habilitado y protegido contra ataques de fuerza bruta.</p>
+                <p class="text-[11px] text-emerald-700">Tu cuenta cuenta con doble factor activado contra accesos no autorizados.</p>
               </div>
 
               <!-- Flujo Paso 1 y Paso 2: Generar y Confirmar Secreto -->
-              <div id="box-2fa-setup" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <div class="flex items-center justify-between pb-1 border-b border-slate-200/70">
+              <div id="box-2fa-setup" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 animate-fade-in-up">
+                <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/70">
                   <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wide">Paso 1: Vincular App</span>
-                  <span class="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">Pendiente</span>
+                  <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Pendiente</span>
                 </div>
 
                 <div>
-                  <label class="block text-[11px] font-semibold text-slate-700 mb-1">Clave Secreta Base32:</label>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1">Clave Secreta Base32:</label>
                   <div class="flex items-center gap-1.5">
                     <input type="text" id="secret-2fa-val" readonly
-                      class="font-mono text-xs w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 select-all font-bold tracking-wider">
-                    <button type="button" onclick="copySecret2FA()"
-                      class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition">
+                      class="font-mono text-xs w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-800 select-all font-bold tracking-wider">
+                    <button type="button" id="btn-copy-secret" onclick="copySecret2FA()"
+                      class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95">
                       Copiar
                     </button>
                   </div>
                   <p class="text-[10px] text-slate-500 mt-1 leading-tight">
-                    Ingresa esta clave en tu aplicación de autenticación para vincular tu identidad.
+                    Ingresa esta clave en Google Authenticator, Authy o 1Password.
                   </p>
                 </div>
 
                 <!-- Paso 2: Verificación de código TOTP -->
-                <div class="pt-2 border-t border-slate-200/70 space-y-2">
+                <div class="pt-2.5 border-t border-slate-200/70 space-y-2">
                   <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wide">Paso 2: Confirmar Código</span>
                   <div>
-                    <label for="input-2fa-code" class="block text-[11px] font-semibold text-slate-700 mb-1">Código de 6 dígitos generado:</label>
+                    <label for="input-2fa-code" class="block text-[11px] font-bold text-slate-700 mb-1">Código de 6 dígitos:</label>
                     <div class="flex gap-2">
                       <input type="text" id="input-2fa-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456"
-                        class="w-full text-center tracking-widest font-mono text-sm font-bold bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                        class="w-full text-center tracking-widest font-mono text-sm font-bold bg-white border border-slate-300 rounded-xl px-3 py-1.5 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition">
                       <button type="button" id="btn-verify-2fa" onclick="verifyTwoFactor()"
-                        class="whitespace-nowrap px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
-                        Verificar y Activar
+                        class="whitespace-nowrap px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95">
+                        Activar 2FA
                       </button>
                     </div>
                   </div>
@@ -546,17 +665,17 @@
               </div>
 
               <!-- Códigos de Respaldo Generados -->
-              <div id="box-2fa-backup-codes" class="hidden p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5">
+              <div id="box-2fa-backup-codes" class="hidden p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2.5 animate-pop-in">
                 <div class="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
                   <span>⚠️</span> <span>Códigos de Respaldo de Un Solo Uso</span>
                 </div>
                 <p class="text-[11px] text-amber-800 leading-tight">
-                  Guarda estos códigos en un lugar seguro (gestor de contraseñas). Cada código solo puede usarse una vez en caso de pérdida del dispositivo móvil.
+                  Guarda estos códigos en un lugar seguro. Solo se muestran una sola vez al activarse.
                 </p>
-                <div id="backup-codes-list" class="grid grid-cols-2 gap-1.5 font-mono text-xs bg-white p-2.5 rounded-lg border border-amber-200 text-slate-800 text-center font-bold">
+                <div id="backup-codes-list" class="grid grid-cols-2 gap-1.5 font-mono text-xs bg-white p-2.5 rounded-xl border border-amber-200 text-slate-800 text-center font-bold">
                 </div>
-                <button type="button" onclick="copyBackupCodes()"
-                  class="w-full py-1.5 px-3 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-semibold transition">
+                <button type="button" id="btn-copy-backup" onclick="copyBackupCodes()"
+                  class="w-full py-1.5 px-3 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-xl text-xs font-bold transition active:scale-95">
                   📋 Copiar Códigos de Respaldo
                 </button>
               </div>
@@ -564,7 +683,7 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100">
               <button type="button" id="btn-setup-2fa" onclick="setupTwoFactor()"
-                class="w-full inline-flex justify-center items-center py-2 px-4 border border-brand-200 rounded-xl text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                class="w-full inline-flex justify-center items-center py-2 px-4 border border-brand-200 rounded-xl text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-500 transition active:scale-95">
                 Configurar / Regenerar 2FA
               </button>
             </div>
@@ -576,10 +695,9 @@
     </main>
 
     <!-- Pie de Página Institucional -->
-    <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400">
+    <footer class="bg-white/80 backdrop-blur-sm border-t border-slate-200/80 py-4 text-center text-xs text-slate-400">
       <div class="max-w-7xl mx-auto px-4">
-        Gestor de Identidad y Accesos (IAM) Ligero para Pymes &copy; 2026. Conforme a rúbrica institucional de
-        Ciberseguridad.
+        Gestor de Identidad y Accesos (IAM) Ligero para Pymes &copy; 2026. Conforme a rúbrica institucional de Ciberseguridad.
       </div>
     </footer>
   </div>
@@ -588,31 +706,27 @@
   <!-- MODAL DE CONFIRMACIÓN: OFFBOARDING EXPRESS                -->
   <!-- ======================================================== -->
   <div id="modal-offboarding"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100 space-y-4">
-      <div class="h-12 w-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-red-100 space-y-4 animate-pop-in">
+      <div class="h-14 w-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner animate-attention">
         ⚠️
       </div>
       <div class="text-center">
         <h3 class="text-lg font-bold text-slate-900">¿Ejecutar Offboarding Express?</h3>
         <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
-          Esta acción desactiva inmediatamente la cuenta de <strong id="offboarding-target-name"
-            class="text-slate-800"></strong> (<span id="offboarding-target-email"
-            class="text-slate-600 font-mono"></span>).
+          Esta acción desactiva inmediatamente la cuenta de <strong id="offboarding-target-name" class="text-slate-800"></strong> (<span id="offboarding-target-email" class="text-slate-600 font-mono"></span>).
         </p>
-        <div class="mt-3 p-3 bg-red-50 text-red-800 border border-red-200 rounded-xl text-[11px] text-left">
-          🛡️ <strong>Invalidación en tiempo real:</strong> Todos los tokens JWT previamente emitidos para este
-          colaborador quedarán bloqueados de forma inmediata (<code
-            class="bg-red-100 px-1 py-0.5 rounded">HTTP 403 Forbidden</code>).
+        <div class="mt-3.5 p-3.5 bg-red-50 text-red-800 border border-red-200 rounded-2xl text-[11px] text-left">
+          🛡️ <strong>Invalidación en tiempo real:</strong> Los tokens JWT emitidos previamente quedarán bloqueados de forma instantánea (<code class="bg-red-100 px-1 py-0.5 rounded font-mono font-bold">HTTP 403 Forbidden</code>).
         </div>
       </div>
       <div class="flex gap-2.5 pt-2">
         <button type="button" onclick="closeOffboardingModal()"
-          class="flex-1 py-2 px-3 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50">
+          class="flex-1 py-2.5 px-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 transition active:scale-95">
           Cancelar
         </button>
         <button type="button" id="btn-confirm-offboarding"
-          class="flex-1 py-2 px-3 border border-transparent rounded-xl text-xs font-semibold text-white bg-red-600 hover:bg-red-700 shadow-sm">
+          class="flex-1 py-2.5 px-3 border border-transparent rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/20 transition active:scale-95">
           Confirmar Revocación
         </button>
       </div>
@@ -627,11 +741,14 @@
     let currentUser = null;
     let usersCache = [];
     let pendingOffboardingId = null;
+    let currentBackupCodes = [];
+    let filterDebounceTimer = null;
 
     // Elementos del DOM
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
     const loginForm = document.getElementById('login-form');
+    const loginCard = document.getElementById('login-card');
     const loginErrorAlert = document.getElementById('login-error-alert');
     const loginErrorText = document.getElementById('login-error-text');
     const loginSubmitBtn = document.getElementById('login-submit-btn');
@@ -655,7 +772,6 @@
       }
 
       try {
-        // Validar el token contra el backend en /api/auth/me
         const res = await apiRequest('/api/auth/me');
         if (res.success && res.user) {
           currentUser = res.user;
@@ -666,7 +782,6 @@
           showLoginView();
         }
       } catch (err) {
-        console.warn('Sesión no válida o expirada:', err.message);
         clearSession();
         showLoginView();
       }
@@ -682,18 +797,18 @@
       viewLogin.classList.add('hidden');
       viewApp.classList.remove('hidden');
 
-      // Actualizar datos del usuario en el encabezado
       document.getElementById('user-display-name').textContent = currentUser.name;
       document.getElementById('user-display-email').textContent = currentUser.email;
 
       const roleBadge = document.getElementById('user-display-role-badge');
       roleBadge.textContent = currentUser.role;
+
       if (currentUser.role === 'Admin') {
-        roleBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-100 text-brand-800';
+        roleBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-100 text-brand-800';
         document.getElementById('admin-tabs-nav').classList.remove('hidden');
         switchAdminTab('users');
       } else {
-        roleBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800';
+        roleBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800';
         document.getElementById('admin-tabs-nav').classList.add('hidden');
         document.getElementById('admin-sec-users').classList.add('hidden');
         document.getElementById('admin-sec-audit').classList.add('hidden');
@@ -709,12 +824,25 @@
     }
 
     function fillCredentials(email, pass) {
-      document.getElementById('login-email').value = email;
-      document.getElementById('login-password').value = pass;
+      const emailInput = document.getElementById('login-email');
+      const passInput = document.getElementById('login-password');
+
+      emailInput.value = email;
+      passInput.value = pass;
+
+      // Efecto flash de resaltado visual
+      [emailInput, passInput].forEach(input => {
+        input.classList.add('ring-2', 'ring-brand-500', 'bg-indigo-50/70');
+        setTimeout(() => {
+          input.classList.remove('ring-2', 'ring-brand-500', 'bg-indigo-50/70');
+        }, 600);
+      });
+
+      showToast('Credenciales demo cargadas en los campos.', 'info');
     }
 
     // ----------------------------------------------------------
-    // 2. Interceptor Central de API (fetch seguro)
+    // 2. Interceptor Central de API (fetch seguro y relativo)
     // ----------------------------------------------------------
     async function apiRequest(endpoint, options = {}) {
       const token = localStorage.getItem('iam_token');
@@ -727,7 +855,7 @@
       const res = await fetch(endpoint, { ...options, headers });
       const data = await res.json().catch(() => ({}));
 
-      // Si el backend devuelve 401 (No autenticado / token_version inválido / credenciales cambiadas)
+      // Si el backend devuelve 401 (Sesión no autorizada / token_version inválido / expirado)
       if (res.status === 401 && !endpoint.includes('/api/auth/login')) {
         const errorMsg = data.error || 'Sesión expirada o no autorizada. Inicie sesión nuevamente.';
         showToast(errorMsg, 'error');
@@ -754,13 +882,20 @@
     // 3. Configuración de Eventos del DOM
     // ----------------------------------------------------------
     function setupEventListeners() {
-      // Toggle ver contraseña en Login
+      // Toggle ver/ocultar contraseña con feedback visual
       document.getElementById('toggle-login-pass').addEventListener('click', () => {
         const passInput = document.getElementById('login-password');
-        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        const eyeIcon = document.getElementById('eye-icon');
+        if (passInput.type === 'password') {
+          passInput.type = 'text';
+          eyeIcon.textContent = '🙈';
+        } else {
+          passInput.type = 'password';
+          eyeIcon.textContent = '👁️';
+        }
       });
 
-      // Submit Formulario de Login
+      // Submit Formulario de Login con animación de sacudida en error
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginErrorAlert.classList.add('hidden');
@@ -778,24 +913,29 @@
           });
 
           if (res.success && res.token) {
-            // Guardar token JWT y datos de usuario
             localStorage.setItem('iam_token', res.token);
             localStorage.setItem('iam_user', JSON.stringify(res.user));
             currentUser = res.user;
             showToast(`¡Bienvenido, ${currentUser.name}!`, 'success');
             showAppView();
           } else {
-            // Error controlado por el servidor (Anti-enumeración: siempre mensaje genérico)
             loginErrorText.textContent = res.error || 'Credenciales inválidas';
             loginErrorAlert.classList.remove('hidden');
+            // Animación de sacudida (shake)
+            loginCard.classList.remove('animate-shake');
+            void loginCard.offsetWidth; // Forzar reflow
+            loginCard.classList.add('animate-shake');
           }
         } catch (err) {
           loginErrorText.textContent = err.message || 'Error de conexión con el servidor';
           loginErrorAlert.classList.remove('hidden');
+          loginCard.classList.remove('animate-shake');
+          void loginCard.offsetWidth;
+          loginCard.classList.add('animate-shake');
         } finally {
           loginSubmitBtn.disabled = false;
           loginSpinner.classList.add('hidden');
-          loginBtnText.textContent = 'Iniciar Sesión';
+          loginBtnText.textContent = 'Iniciar Sesión Segura';
         }
       });
 
@@ -827,7 +967,7 @@
             });
 
             if (res.success) {
-              showToast(`Usuario ${email} registrado exitosamente (${role})`, 'success');
+              showToast(`Identidad ${email} registrada exitosamente (${role})`, 'success');
               createUserForm.reset();
               loadUsersTable();
               loadAuditLogsTable();
@@ -873,9 +1013,9 @@
             });
 
             if (res.success) {
-              showToast('¡Contraseña actualizada con éxito!', 'success');
+              showToast('¡Contraseña actualizada con éxito! Sesiones previas invalidadas.', 'success');
               changePassForm.reset();
-              if (currentUser.role === 'Admin') loadAuditLogsTable();
+              if (currentUser && currentUser.role === 'Admin') loadAuditLogsTable();
             } else {
               showToast(res.error || 'Error al cambiar contraseña', 'error');
             }
@@ -902,7 +1042,7 @@
           });
 
           if (res.success) {
-            showToast('Offboarding Express ejecutado: Sesión y accesos revocados de inmediato.', 'success');
+            showToast('Offboarding Express ejecutado: Sesión y accesos revocados en tiempo real.', 'success');
             closeOffboardingModal();
             loadUsersTable();
             loadAuditLogsTable();
@@ -937,9 +1077,9 @@
       tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
         if (t === tab) {
-          btn.className = 'tab-link border-brand-600 text-brand-600 whitespace-nowrap py-3.5 px-1 border-b-2 font-semibold text-sm flex items-center gap-2';
+          btn.className = 'tab-link border-brand-600 text-brand-600 whitespace-nowrap py-3.5 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all';
         } else {
-          btn.className = 'tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2';
+          btn.className = 'tab-link border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3.5 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-all';
         }
       });
 
@@ -953,11 +1093,30 @@
     }
 
     // ----------------------------------------------------------
-    // 5. Gestión de la Tabla de Usuarios (GET /api/users)
+    // 5. Gestión de la Tabla de Usuarios con Esqueleto Shimmer
     // ----------------------------------------------------------
-    async function loadUsersTable() {
+    function renderUsersSkeleton() {
       const tbody = document.getElementById('users-table-body');
-      tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Cargando inventario...</td></tr>`;
+      tbody.innerHTML = `
+        <tr class="animate-pulse">
+          <td class="py-3.5 px-4"><div class="h-3.5 bg-slate-200 rounded w-28 mb-1.5 shimmer-effect"></div><div class="h-2.5 bg-slate-100 rounded w-36"></div></td>
+          <td class="py-3.5 px-4"><div class="h-5 bg-slate-200 rounded-md w-16 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4"><div class="h-5 bg-slate-200 rounded-full w-14 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4"><div class="h-3 bg-slate-200 rounded w-20 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4 text-right"><div class="h-7 bg-slate-200 rounded-xl w-32 ml-auto shimmer-effect"></div></td>
+        </tr>
+        <tr class="animate-pulse">
+          <td class="py-3.5 px-4"><div class="h-3.5 bg-slate-200 rounded w-32 mb-1.5 shimmer-effect"></div><div class="h-2.5 bg-slate-100 rounded w-40"></div></td>
+          <td class="py-3.5 px-4"><div class="h-5 bg-slate-200 rounded-md w-16 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4"><div class="h-5 bg-slate-200 rounded-full w-14 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4"><div class="h-3 bg-slate-200 rounded w-20 shimmer-effect"></div></td>
+          <td class="py-3.5 px-4 text-right"><div class="h-7 bg-slate-200 rounded-xl w-32 ml-auto shimmer-effect"></div></td>
+        </tr>
+      `;
+    }
+
+    async function loadUsersTable() {
+      renderUsersSkeleton();
 
       try {
         const res = await apiRequest('/api/users');
@@ -966,50 +1125,50 @@
           document.getElementById('users-count-badge').textContent = usersCache.length;
           renderUsersTable(usersCache);
         } else {
-          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">${res.error || 'Error al cargar usuarios'}</td></tr>`;
+          document.getElementById('users-table-body').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">${res.error || 'Error al cargar usuarios'}</td></tr>`;
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">Error de red</td></tr>`;
+        document.getElementById('users-table-body').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">Error al consultar identidades</td></tr>`;
       }
     }
 
     function renderUsersTable(users) {
       const tbody = document.getElementById('users-table-body');
       if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">No se encontraron usuarios.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No se encontraron usuarios registrados.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = users.map(u => {
+      tbody.innerHTML = users.map((u, index) => {
         const isSelf = currentUser && currentUser.id === u.id;
         const isRevoked = u.status === 'Revoked';
 
         const statusBadge = isRevoked
-          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">● Revocado</span>`
-          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">● Activo</span>`;
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">● Revocado</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse-glow"></span>Activo</span>`;
 
         const roleBadge = u.role === 'Admin'
-          ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">Admin</span>`
-          : `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">Employee</span>`;
+          ? `<span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200">Admin</span>`
+          : `<span class="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">Employee</span>`;
 
         let actionHtml = '';
         if (isSelf) {
-          actionHtml = `<span class="text-xs text-brand-700 font-medium bg-brand-50 px-2 py-1 rounded-md border border-brand-100">Tú (Protegido)</span>`;
+          actionHtml = `<span class="text-xs text-brand-700 font-semibold bg-brand-50 px-2 py-1 rounded-lg border border-brand-100">Tú (Protegido)</span>`;
         } else if (isRevoked) {
-          actionHtml = `<span class="text-xs text-slate-400 italic">Acceso Inactivo</span>`;
+          actionHtml = `<span class="text-xs text-slate-400 italic">Acceso Revocado</span>`;
         } else {
           actionHtml = `
             <button type="button" onclick="openOffboardingModal(${u.id}, '${escapeHtml(u.name)}', '${escapeHtml(u.email)}')"
-              class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm">
-              <span class="mr-1">⚡</span> Revocar Accesos (Offboarding Express)
+              class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-xs active:scale-95">
+              <span class="mr-1">⚡</span> Revocar (Offboarding)
             </button>
           `;
         }
 
         return `
-          <tr class="hover:bg-slate-50/80 transition">
+          <tr class="table-row-hover animate-fade-in" style="animation-delay: ${Math.min(index * 30, 300)}ms">
             <td class="py-3 px-4">
-              <div class="font-semibold text-slate-900">${escapeHtml(u.name)}</div>
+              <div class="font-bold text-slate-900">${escapeHtml(u.name)}</div>
               <div class="text-slate-500 text-[11px] font-mono">${escapeHtml(u.email)}</div>
             </td>
             <td class="py-3 px-4">${roleBadge}</td>
@@ -1022,11 +1181,14 @@
     }
 
     function filterUsersTable() {
-      const q = document.getElementById('filter-users-input').value.toLowerCase();
-      const filtered = usersCache.filter(u =>
-        u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-      );
-      renderUsersTable(filtered);
+      clearTimeout(filterDebounceTimer);
+      filterDebounceTimer = setTimeout(() => {
+        const q = document.getElementById('filter-users-input').value.toLowerCase().trim();
+        const filtered = usersCache.filter(u =>
+          u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        );
+        renderUsersTable(filtered);
+      }, 150);
     }
 
     function openOffboardingModal(id, name, email) {
@@ -1042,11 +1204,24 @@
     }
 
     // ----------------------------------------------------------
-    // 6. Bitácora de Auditoría (GET /api/audit-logs)
+    // 6. Bitácora de Auditoría con Esqueleto Shimmer
     // ----------------------------------------------------------
-    async function loadAuditLogsTable() {
+    function renderAuditSkeleton() {
       const tbody = document.getElementById('audit-table-body');
-      tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 font-sans">Cargando bitácora inmutable...</td></tr>`;
+      tbody.innerHTML = `
+        <tr class="animate-pulse">
+          <td class="py-3 px-4"><div class="h-3 bg-slate-200 rounded w-8 shimmer-effect"></div></td>
+          <td class="py-3 px-4"><div class="h-3 bg-slate-200 rounded w-24 shimmer-effect"></div></td>
+          <td class="py-3 px-4"><div class="h-5 bg-slate-200 rounded w-20 shimmer-effect"></div></td>
+          <td class="py-3 px-4"><div class="h-3 bg-slate-200 rounded w-28 shimmer-effect"></div></td>
+          <td class="py-3 px-4"><div class="h-3 bg-slate-200 rounded w-16 shimmer-effect"></div></td>
+          <td class="py-3 px-4"><div class="h-3 bg-slate-200 rounded w-48 shimmer-effect"></div></td>
+        </tr>
+      `;
+    }
+
+    async function loadAuditLogsTable() {
+      renderAuditSkeleton();
 
       try {
         const res = await apiRequest('/api/audit-logs?limit=50');
@@ -1055,10 +1230,10 @@
           document.getElementById('audit-table-total').textContent = res.data.length;
           renderAuditTable(res.data);
         } else {
-          tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500 font-sans">${res.error || 'Error al cargar bitácora'}</td></tr>`;
+          document.getElementById('audit-table-body').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500 font-sans">${res.error || 'Error al cargar bitácora'}</td></tr>`;
         }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500 font-sans">Error al consultar auditoría</td></tr>`;
+        document.getElementById('audit-table-body').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500 font-sans">Error al consultar auditoría</td></tr>`;
       }
     }
 
@@ -1069,21 +1244,22 @@
         return;
       }
 
-      tbody.innerHTML = logs.map(l => {
+      tbody.innerHTML = logs.map((l, index) => {
         let actionBadge = '';
-        if (l.action === 'LOGIN_SUCCESS') actionBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">${l.action}</span>`;
-        else if (l.action.includes('REVOKED') || l.action.includes('DENIED')) actionBadge = `<span class="bg-red-50 text-red-700 border border-red-200 px-1.5 py-0.5 rounded font-bold">${l.action}</span>`;
-        else if (l.action === 'LOGIN_FAILED') actionBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold">${l.action}</span>`;
-        else if (l.action === 'USER_CREATED') actionBadge = `<span class="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-bold">${l.action}</span>`;
-        else actionBadge = `<span class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-semibold">${l.action}</span>`;
+        if (l.action === 'LOGIN_SUCCESS') actionBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-bold">LOGIN_SUCCESS</span>`;
+        else if (l.action.includes('REVOKED') || l.action.includes('DENIED')) actionBadge = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-lg font-bold">${l.action}</span>`;
+        else if (l.action === 'LOGIN_FAILED') actionBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">LOGIN_FAILED</span>`;
+        else if (l.action === 'USER_CREATED') actionBadge = `<span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-lg font-bold">USER_CREATED</span>`;
+        else if (l.action.includes('2FA')) actionBadge = `<span class="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-lg font-bold">${l.action}</span>`;
+        else actionBadge = `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg font-semibold">${l.action}</span>`;
 
         let detailsFormatted = '';
         if (typeof l.details === 'object' && l.details !== null) {
           const d = l.details;
           detailsFormatted = `
-            <div class="text-slate-800 font-sans text-xs font-medium">${escapeHtml(d.description || d.event || d.reason || '-')}</div>
-            <div class="text-slate-400 text-[10px] space-x-2 mt-0.5">
-              ${d.affectedEmail ? `<span>Afectado: <strong class="text-slate-600">${escapeHtml(d.affectedEmail)}</strong></span>` : ''}
+            <div class="text-slate-800 font-sans text-xs font-semibold">${escapeHtml(d.description || d.event || d.reason || '-')}</div>
+            <div class="text-slate-400 text-[10px] space-x-2 mt-0.5 font-sans">
+              ${d.affectedEmail ? `<span>Afectado: <strong class="text-slate-600 font-mono">${escapeHtml(d.affectedEmail)}</strong></span>` : ''}
               ${d.role ? `<span>Rol: <strong class="text-slate-600">${escapeHtml(d.role)}</strong></span>` : ''}
             </div>
           `;
@@ -1092,12 +1268,12 @@
         }
 
         return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-2.5 px-4 text-slate-400">#${l.id}</td>
+          <tr class="table-row-hover animate-fade-in" style="animation-delay: ${Math.min(index * 25, 300)}ms">
+            <td class="py-2.5 px-4 text-slate-400 font-mono">#${l.id}</td>
             <td class="py-2.5 px-4 text-slate-600 whitespace-nowrap">${escapeHtml(l.timestamp)}</td>
             <td class="py-2.5 px-4">${actionBadge}</td>
-            <td class="py-2.5 px-4 text-slate-700 font-semibold">${escapeHtml(l.user_email)}</td>
-            <td class="py-2.5 px-4 text-slate-500">${escapeHtml(l.ip_address || '127.0.0.1')}</td>
+            <td class="py-2.5 px-4 text-slate-700 font-semibold font-mono">${escapeHtml(l.user_email)}</td>
+            <td class="py-2.5 px-4 text-slate-500 font-mono">${escapeHtml(l.ip_address || '127.0.0.1')}</td>
             <td class="py-2.5 px-4 max-w-xs sm:max-w-md">${detailsFormatted}</td>
           </tr>
         `;
@@ -1107,8 +1283,6 @@
     // ----------------------------------------------------------
     // 7. Portal del Empleado (Perfil & 2FA Flujo Seguro)
     // ----------------------------------------------------------
-    let currentBackupCodes = [];
-
     async function loadProfileData() {
       try {
         const res = await apiRequest('/api/portal/profile');
@@ -1121,10 +1295,10 @@
 
           const statusElem = document.getElementById('profile-status');
           if (u.status === 'Active') {
-            statusElem.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700';
+            statusElem.className = 'inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-emerald-50 text-emerald-700';
             statusElem.textContent = '● Activo';
           } else {
-            statusElem.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-red-50 text-red-700';
+            statusElem.className = 'inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-red-50 text-red-700';
             statusElem.textContent = '● Revocado';
           }
 
@@ -1133,17 +1307,17 @@
           const btnSetup = document.getElementById('btn-setup-2fa');
 
           if (u.is2FAEnabled) {
-            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-800';
+            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-emerald-100 text-emerald-800';
             badge2fa.textContent = '🛡️ Habilitado';
             if (boxActive) boxActive.classList.remove('hidden');
             if (btnSetup) btnSetup.textContent = 'Regenerar Clave 2FA';
           } else if (u.is2FAPending) {
-            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-amber-100 text-amber-800';
+            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded-lg font-bold bg-amber-100 text-amber-800';
             badge2fa.textContent = '⏳ Pendiente';
             if (boxActive) boxActive.classList.add('hidden');
             if (btnSetup) btnSetup.textContent = 'Reanudar Configuración 2FA';
           } else {
-            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-600';
+            badge2fa.className = 'inline-flex items-center px-2 py-0.5 rounded-lg font-semibold bg-slate-100 text-slate-600';
             badge2fa.textContent = '⚪ Deshabilitado';
             if (boxActive) boxActive.classList.add('hidden');
             if (btnSetup) btnSetup.textContent = 'Configurar 2FA (TOTP)';
@@ -1210,7 +1384,7 @@
             currentBackupCodes = res.backupCodes;
             const container = document.getElementById('backup-codes-list');
             container.innerHTML = res.backupCodes
-              .map(c => `<div class="bg-white border border-amber-200/80 rounded px-2 py-1 text-slate-800 font-mono text-[11px] shadow-sm">${escapeHtml(c)}</div>`)
+              .map((c, i) => `<div class="bg-white border border-amber-200/80 rounded-xl px-2 py-1 text-slate-800 font-mono text-[11px] shadow-xs animate-pop-in" style="animation-delay: ${i * 40}ms">${escapeHtml(c)}</div>`)
               .join('');
             document.getElementById('box-2fa-backup-codes').classList.remove('hidden');
           }
@@ -1224,17 +1398,26 @@
         showToast(err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Verificar y Activar';
+        btn.textContent = 'Activar 2FA';
       }
     }
 
+    // Copiar con retroalimentación visual animada
     function copySecret2FA() {
       const copyText = document.getElementById('secret-2fa-val');
+      const btn = document.getElementById('btn-copy-secret');
       copyText.select();
       navigator.clipboard.writeText(copyText.value).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ ¡Copiado!';
+        btn.className = 'px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all duration-200 scale-105 shadow-sm';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.className = 'px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95';
+        }, 1800);
         showToast('¡Clave secreta 2FA copiada al portapapeles!', 'info');
       }).catch(() => {
-        showToast('Texto seleccionado. Presione Ctrl+C para copiar.', 'info');
+        showToast('Presione Ctrl+C para copiar la clave.', 'info');
       });
     }
 
@@ -1243,8 +1426,16 @@
         showToast('No hay códigos de respaldo disponibles.', 'error');
         return;
       }
+      const btn = document.getElementById('btn-copy-backup');
       const text = currentBackupCodes.join('\n');
       navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ ¡Códigos Copiados!';
+        btn.className = 'w-full py-1.5 px-3 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all duration-200 scale-[1.02] shadow-sm';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.className = 'w-full py-1.5 px-3 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-xl text-xs font-bold transition active:scale-95';
+        }, 1800);
         showToast('¡Códigos de respaldo copiados al portapapeles!', 'info');
       }).catch(() => {
         showToast('No se pudo copiar automáticamente al portapapeles.', 'info');
@@ -1252,25 +1443,43 @@
     }
 
     // ----------------------------------------------------------
-    // 8. Utilidades: Toast y Sanitización
+    // 8. Sistema de Notificaciones Toast con Barra de Progreso
     // ----------------------------------------------------------
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
 
       let colors = 'bg-slate-900 text-white border-slate-700';
+      let progressColor = 'bg-brand-500';
       let icon = 'ℹ️';
-      if (type === 'success') { colors = 'bg-emerald-600 text-white border-emerald-500'; icon = '✅'; }
-      if (type === 'error') { colors = 'bg-red-600 text-white border-red-500'; icon = '⚠️'; }
 
-      toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg border ${colors} fade-in transition duration-300 transform`;
-      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(message)}</span>`;
+      if (type === 'success') {
+        colors = 'bg-slate-900 text-white border-emerald-500/40';
+        progressColor = 'bg-emerald-500';
+        icon = '✅';
+      }
+      if (type === 'error') {
+        colors = 'bg-slate-900 text-white border-red-500/40';
+        progressColor = 'bg-red-500';
+        icon = '⚠️';
+      }
+
+      toast.className = `toast-item pointer-events-auto relative overflow-hidden flex flex-col rounded-2xl text-xs font-medium shadow-2xl border ${colors} backdrop-blur-md`;
+      toast.innerHTML = `
+        <div class="flex items-center gap-2.5 px-4 py-3">
+          <span class="text-base">${icon}</span>
+          <span class="flex-1 font-semibold leading-snug">${escapeHtml(message)}</span>
+        </div>
+        <div class="h-1 w-full bg-slate-800">
+          <div class="h-full toast-progress ${progressColor}"></div>
+        </div>
+      `;
 
       container.appendChild(toast);
+
       setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
-        setTimeout(() => toast.remove(), 300);
+        toast.classList.add('exiting');
+        setTimeout(() => toast.remove(), 260);
       }, 4000);
     }
 
