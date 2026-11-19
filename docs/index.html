@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100 scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IAM Pymes | Gestor de Identidad y Accesos Ligero</title>
+  <meta name="description" content="Presentación Técnica y Arquitectura del Gestor de Identidad y Accesos (IAM) Ligero y Seguro para Pymes. Node.js, Express, SQLite, JWT y 2FA TOTP con AES-256-GCM.">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              950: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Efectos de fondo y degradados oscuros */
+    body {
+      background-color: #020617;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.25) 0%, transparent 100%);
+      background-attachment: fixed;
+    }
+
+    /* Brillo para bordes cyberpunk / AppSec */
+    .glow-border {
+      position: relative;
+    }
+    .glow-border::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(to bottom right, rgba(99, 102, 241, 0.4), rgba(16, 185, 129, 0.2), transparent 70%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Animaciones suaves */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.9; }
+    }
+    .animate-glow {
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    /* Scrollbar estilizada */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+
+<body class="min-h-full flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- ======================================================== -->
+  <!-- BARRA DE NAVEGACIÓN SUPERIOR                             -->
+  <!-- ======================================================== -->
+  <header class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-700 flex items-center justify-center text-xl shadow-lg shadow-brand-500/20">
+            🛡️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white tracking-tight text-base sm:text-lg">IAM Pymes</span>
+              <span class="text-[10px] bg-brand-950 text-brand-300 border border-brand-800/80 px-2 py-0.5 rounded-full font-mono font-semibold">
+                AppSec v1.0
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Gestor de Identidad y Accesos Ligero</p>
+          </div>
+        </div>
+
+        <nav class="flex items-center space-x-3 sm:space-x-6 text-xs sm:text-sm font-medium text-slate-300">
+          <a href="#quickstart" class="hover:text-emerald-400 transition">Guía Rápida</a>
+          <a href="#seguridad" class="hover:text-emerald-400 transition">Seguridad & AppSec</a>
+          <a href="#endpoints" class="hover:text-emerald-400 transition">Endpoints API</a>
+          <a href="https://github.com/carlossanchez1192/iam-ligero-pymes" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-semibold transition shadow-xs active:scale-95">
+            <span>GitHub</span>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- HERO SECTION                                             -->
+  <!-- ======================================================== -->
+  <section class="relative overflow-hidden py-16 sm:py-24 border-b border-slate-800/60">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      
+      <!-- Badge de Estado -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Demostración de Arquitectura & Portal de Especificaciones</span>
+      </div>
+
+      <!-- Título Principal -->
+      <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        Gestor de Identidad y Accesos <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-emerald-400">
+          Ligero y Seguro para Pymes
+        </span>
+      </h1>
+
+      <!-- Resumen Descriptivo -->
+      <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+        Solución integral de autenticación robusta basada en <strong>Node.js, Express, SQLite, JWT (HS256)</strong> y <strong>Doble Factor TOTP con cifrado AES-256-GCM</strong>. Diseñada para resolver la persistencia indebida de sesiones en despidos (<strong>Offboarding Express</strong>) y garantizar trazabilidad inmutable.
+      </p>
+
+      <!-- Alerta Informativa: GitHub Pages vs Servidor Local -->
+      <div class="max-w-2xl mx-auto p-4 rounded-2xl bg-indigo-950/40 border border-indigo-800/60 text-left text-xs sm:text-sm text-indigo-200 flex items-start gap-3 glow-border">
+        <span class="text-lg">ℹ️</span>
+        <div class="space-y-1">
+          <p class="font-bold text-white">¿Por qué estás viendo esta página en GitHub Pages?</p>
+          <p class="text-slate-300 text-xs leading-relaxed">
+            GitHub Pages solo hospeda páginas estáticas (HTML/CSS/JS cliente) y no puede ejecutar el motor Node.js ni la base de datos SQLite interactiva. Para usar la aplicación completa con login real, base de datos local y panel administrativo, clona el repositorio e inícialo con <code class="font-mono bg-indigo-900/60 px-1.5 py-0.5 rounded text-emerald-300 font-bold">npm start</code> en <code class="font-mono bg-indigo-900/60 px-1.5 py-0.5 rounded text-emerald-300 font-bold">http://localhost:3000</code>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex flex-wrap justify-center gap-3 pt-2">
+        <a href="#quickstart"
+          class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-500/25 transition-all duration-200 active:scale-95 flex items-center gap-2">
+          <span>🚀 Cómo Iniciar en Local</span>
+        </a>
+        <a href="#seguridad"
+          class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition-all duration-200 active:scale-95 flex items-center gap-2">
+          <span>🛡️ Pilares AppSec</span>
+        </a>
+        <a href="#endpoints"
+          class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm transition-all duration-200 active:scale-95 flex items-center gap-2">
+          <span>📜 Catálogo de Endpoints</span>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- SECCIÓN 1: GUÍA DE DESPLIEGUE RÁPIDO (QUICKSTART)        -->
+  <!-- ======================================================== -->
+  <section id="quickstart" class="py-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 border-b border-slate-800/60">
+    <div class="text-center space-y-2">
+      <span class="text-xs uppercase tracking-widest text-emerald-400 font-mono font-bold">Puesta en Marcha</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Cómo Levantar el Servidor en Local</h2>
+      <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+        Sigue estos 3 sencillos comandos para poner a rodar el backend Node.js y la interfaz en vivo.
+      </p>
+    </div>
+
+    <!-- Comandos en 3 pasos -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      
+      <!-- Paso 1 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between glow-border">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-brand-400 bg-brand-950/80 px-2.5 py-1 rounded-lg border border-brand-800/60">PASO 1</span>
+            <span class="text-xs text-slate-400">Dependencias</span>
+          </div>
+          <h3 class="text-sm font-bold text-white">Instalar Paquetes</h3>
+          <p class="text-xs text-slate-400">Instala Express, SQLite3, bcrypt, JWT y Speakeasy.</p>
+        </div>
+        <div class="mt-4 relative group">
+          <pre class="bg-black/70 p-3 rounded-xl font-mono text-xs text-emerald-300 border border-slate-800 overflow-x-auto">npm install</pre>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between glow-border">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-brand-400 bg-brand-950/80 px-2.5 py-1 rounded-lg border border-brand-800/60">PASO 2</span>
+            <span class="text-xs text-slate-400">Configuración</span>
+          </div>
+          <h3 class="text-sm font-bold text-white">Variables de Entorno</h3>
+          <p class="text-xs text-slate-400">El repositorio incluye <code>.env</code> preconfigurado o puedes duplicar <code>.env.example</code>.</p>
+        </div>
+        <div class="mt-4 relative group">
+          <pre class="bg-black/70 p-3 rounded-xl font-mono text-xs text-emerald-300 border border-slate-800 overflow-x-auto">cp .env.example .env</pre>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between glow-border">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800/60">PASO 3</span>
+            <span class="text-xs text-slate-400">Ejecución</span>
+          </div>
+          <h3 class="text-sm font-bold text-white">Iniciar el Servidor</h3>
+          <p class="text-xs text-slate-400">Arranca el backend y sirve automáticamente la interfaz en el puerto 3000.</p>
+        </div>
+        <div class="mt-4 relative group">
+          <pre class="bg-black/70 p-3 rounded-xl font-mono text-xs text-emerald-300 border border-slate-800 overflow-x-auto">npm start</pre>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- URL y Credenciales de Acceso -->
+    <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Punto de Acceso Local</span>
+          <div class="text-lg font-bold font-mono text-white flex items-center gap-2 mt-0.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <a href="http://localhost:3000" target="_blank" class="hover:text-emerald-400 hover:underline">http://localhost:3000</a>
+          </div>
+        </div>
+        <div class="text-xs text-slate-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          Servidor activo tras ejecutar <code class="text-emerald-400 font-bold">npm start</code>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-slate-400 font-bold">👤 Rol Administrador (IAM Superadmin):</span>
+          <div class="text-slate-200">Email: <code class="text-brand-300 font-mono font-bold">admin@iam-pymes.local</code></div>
+          <div class="text-slate-200">Password: <code class="text-brand-300 font-mono font-bold">AdminPass123!*Segura</code></div>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-slate-400 font-bold">🛡️ Funciones Disponibles:</span>
+          <div class="text-slate-300">• Gestión de Identidades (Alta, Rol, Offboarding Express)</div>
+          <div class="text-slate-300">• Bitácora Forense Inmutable (<code>audit_logs</code>) & 2FA TOTP</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- SECCIÓN 2: PILARES DE SEGURIDAD & APPSEC                 -->
+  <!-- ======================================================== -->
+  <section id="seguridad" class="py-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 border-b border-slate-800/60">
+    <div class="text-center space-y-2">
+      <span class="text-xs uppercase tracking-widest text-brand-400 font-mono font-bold">Arquitectura de Ciberseguridad</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Mecanismos Defensivos Implementados</h2>
+      <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+        Protección en profundidad frente a vulnerabilidades OWASP Top 10 y cumplimiento estricto de rúbricas institucionales.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Pilar 1: token_version y Offboarding Express -->
+      <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 glow-border">
+        <div class="flex items-center gap-2.5">
+          <span class="p-2 rounded-xl bg-brand-950 text-brand-400 border border-brand-800 text-lg">⚡</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Revocación en Tiempo Real (<code>token_version</code>)</h3>
+            <span class="text-[11px] text-slate-400 font-mono">Offboarding Express & Password Invalidation</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Los tokens JWT clásicos son persistentes hasta su expiración. Este sistema inyecta un campo numérico <code class="font-mono text-brand-300 font-bold">token_version</code> en el payload. Al ejecutar <strong>Offboarding Express</strong> o cambiar la contraseña, se incrementa en base de datos, provocando que cualquier JWT previo sea rechazado de inmediato con <code class="font-mono text-red-400 font-bold">HTTP 401/403</code>.
+        </p>
+      </div>
+
+      <!-- Pilar 2: 2FA TOTP con AES-256-GCM -->
+      <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 glow-border">
+        <div class="flex items-center gap-2.5">
+          <span class="p-2 rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800 text-lg">🔐</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Doble Factor TOTP con AES-256-GCM</h3>
+            <span class="text-[11px] text-slate-400 font-mono">Cifrado en Reposo & Códigos de Respaldo</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Flujo seguro en 2 pasos: el secreto Base32 se almacena en SQLite cifrado con <strong>AES-256-GCM</strong> (<code class="font-mono text-emerald-300">enc:v1:&lt;iv&gt;:&lt;tag&gt;:&lt;cipher&gt;</code>). Cuenta con verificación TOTP de 6 dígitos (<code class="font-mono text-emerald-300">window: 1</code>), prevención de ataques de replay (<code class="font-mono text-emerald-300">last_totp_code</code>) y generación de 8 códigos de respaldo hasheados con <strong>SHA-256</strong>.
+        </p>
+      </div>
+
+      <!-- Pilar 3: Anti-Enumeración y Timing Attacks -->
+      <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 glow-border">
+        <div class="flex items-center gap-2.5">
+          <span class="p-2 rounded-xl bg-amber-950 text-amber-400 border border-amber-800 text-lg">🛡️</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Defensas Anti-Enumeración & Timing Attacks</h3>
+            <span class="text-[11px] text-slate-400 font-mono">Simulación de bcrypt con Hash Ficticio</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Ante correos inexistentes o contraseñas incorrectas, el servidor siempre devuelve el mensaje genérico <code class="font-mono text-amber-300 font-bold">"Credenciales inválidas" (HTTP 401)</code>. Además, se ejecuta una comparación simulada con un hash ficticio para igualar el tiempo de cómputo del algoritmo bcrypt (cost 12), neutralizando ataques por análisis de tiempo de respuesta.
+        </p>
+      </div>
+
+      <!-- Pilar 4: Trazabilidad Forense inmutable -->
+      <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 glow-border">
+        <div class="flex items-center gap-2.5">
+          <span class="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-800 text-lg">📜</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Bitácora de Auditoría Forense (<code>audit_logs</code>)</h3>
+            <span class="text-[11px] text-slate-400 font-mono">Trazabilidad JSON Estructurada</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Cada evento de seguridad (inicio de sesión, fallos, creación de identidades, offboarding, cambios de contraseña y activación 2FA) se registra en una tabla inmutable de SQLite con estructura JSON detallada que incluye: <code class="font-mono text-purple-300">action</code>, <code class="font-mono text-purple-300">affectedEmail</code>, <code class="font-mono text-purple-300">role</code>, <code class="font-mono text-purple-300">ip</code> y descripción contextual.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- SECCIÓN 3: MATRIZ DE ENDPOINTS DE LA API REST            -->
+  <!-- ======================================================== -->
+  <section id="endpoints" class="py-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 border-b border-slate-800/60">
+    <div class="text-center space-y-2">
+      <span class="text-xs uppercase tracking-widest text-brand-400 font-mono font-bold">Arquitectura RESTful</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Catálogo Completo de Endpoints</h2>
+      <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+        Rutas modulares montadas sobre Express con cabeceras anti-caché y control de acceso RBAC.
+      </p>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-800 text-left text-xs font-mono">
+          <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-3 px-4">Método</th>
+              <th class="py-3 px-4">Ruta / Endpoint</th>
+              <th class="py-3 px-4">Acceso / RBAC</th>
+              <th class="py-3 px-4 font-sans">Propósito Funcional</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/80 text-slate-300">
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">POST</span></td>
+              <td class="py-2.5 px-4 text-white">/api/auth/login</td>
+              <td class="py-2.5 px-4 text-slate-400">Público</td>
+              <td class="py-2.5 px-4 font-sans">Inicio de sesión con anti-enumeración y emisión de JWT HS256.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-blue-950 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded font-bold">GET</span></td>
+              <td class="py-2.5 px-4 text-white">/api/auth/me</td>
+              <td class="py-2.5 px-4 text-brand-400">Token JWT</td>
+              <td class="py-2.5 px-4 font-sans">Retorna la identidad y rol del usuario autenticado en sesión.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-blue-950 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded font-bold">GET</span></td>
+              <td class="py-2.5 px-4 text-white">/api/portal/profile</td>
+              <td class="py-2.5 px-4 text-brand-400">Token JWT</td>
+              <td class="py-2.5 px-4 font-sans">Consulta de autoservicio de perfil y estado de activación 2FA.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-amber-950 text-amber-400 border border-amber-800 px-1.5 py-0.5 rounded font-bold">PUT</span></td>
+              <td class="py-2.5 px-4 text-white">/api/portal/password</td>
+              <td class="py-2.5 px-4 text-brand-400">Token JWT</td>
+              <td class="py-2.5 px-4 font-sans">Cambio de contraseña; incrementa <code>token_version</code> cerrando sesiones activas.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">POST</span></td>
+              <td class="py-2.5 px-4 text-white">/api/portal/2fa/setup</td>
+              <td class="py-2.5 px-4 text-brand-400">Token JWT</td>
+              <td class="py-2.5 px-4 font-sans">Genera secreto Base32 y lo almacena cifrado en reposo con AES-256-GCM.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">POST</span></td>
+              <td class="py-2.5 px-4 text-white">/api/portal/2fa/verify</td>
+              <td class="py-2.5 px-4 text-brand-400">Token JWT</td>
+              <td class="py-2.5 px-4 font-sans">Confirma código TOTP de 6 dígitos, previene replay y emite 8 códigos de respaldo.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-blue-950 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded font-bold">GET</span></td>
+              <td class="py-2.5 px-4 text-white">/api/users</td>
+              <td class="py-2.5 px-4 text-purple-400 font-bold">Admin</td>
+              <td class="py-2.5 px-4 font-sans">Inventario de identidades registradas (excluyendo hashes sensibles).</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">POST</span></td>
+              <td class="py-2.5 px-4 text-white">/api/users</td>
+              <td class="py-2.5 px-4 text-purple-400 font-bold">Admin</td>
+              <td class="py-2.5 px-4 font-sans">Alta de usuario; valida unicidad de email y hashea clave con bcrypt cost 12.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-amber-950 text-amber-400 border border-amber-800 px-1.5 py-0.5 rounded font-bold">PUT</span></td>
+              <td class="py-2.5 px-4 text-white">/api/users/:id/role</td>
+              <td class="py-2.5 px-4 text-purple-400 font-bold">Admin</td>
+              <td class="py-2.5 px-4 font-sans">Asignación de roles con regla anti-degradación del último Admin.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-red-950 text-red-400 border border-red-800 px-1.5 py-0.5 rounded font-bold">PUT</span></td>
+              <td class="py-2.5 px-4 text-white">/api/users/:id/revoke</td>
+              <td class="py-2.5 px-4 text-purple-400 font-bold">Admin</td>
+              <td class="py-2.5 px-4 font-sans">Offboarding Express; bloquea el acceso inmediatamente con HTTP 403.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-blue-950 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded font-bold">GET</span></td>
+              <td class="py-2.5 px-4 text-white">/api/audit-logs</td>
+              <td class="py-2.5 px-4 text-purple-400 font-bold">Admin</td>
+              <td class="py-2.5 px-4 font-sans">Consulta de registros forenses inmutables de auditoría de seguridad.</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 px-4"><span class="bg-blue-950 text-blue-400 border border-blue-800 px-1.5 py-0.5 rounded font-bold">GET</span></td>
+              <td class="py-2.5 px-4 text-white">/health</td>
+              <td class="py-2.5 px-4 text-slate-400">Público</td>
+              <td class="py-2.5 px-4 font-sans">Healthcheck de conectividad de la base de datos y estado del servicio.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- FOOTER INSTITUCIONAL                                     -->
+  <!-- ======================================================== -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
+    <div class="max-w-5xl mx-auto px-4 space-y-2">
+      <p>
+        <strong>Gestor de Identidad y Accesos (IAM) Ligero para Pymes</strong> &copy; 2026. Licencia MIT.
+      </p>
+      <p class="text-slate-600">
+        Cumplimiento estricto de estándares de Ciberseguridad, RBAC y Principio de Privilegio Mínimo.
+      </p>
+    </div>
+  </footer>
+
+</body>
+
+</html>
